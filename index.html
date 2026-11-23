@@ -849,6 +849,8 @@ html,body{background:var(--bg);color:var(--text)}
  .motorcycle-guidance-card{grid-column:1}
 }
 
+
+/* RIDE V17 — resilient geocoding */
 </style>
   <link rel="icon" type="image/svg+xml" href="./icon.svg">
   <link rel="manifest" href="./manifest.webmanifest">
@@ -1299,26 +1301,139 @@ function motorcyclePlannerMarkup(){
  const p=state.routePlanner||defaults.routePlanner;
  const profiles=Object.entries(MOTORCYCLE_ROUTE_PROFILES).map(([id,v])=>"<option value='"+id+"' "+((p.profile||'curvy')===id?'selected':'')+">"+v.label+"</option>").join('');
  const checkedHighways=p.avoidHighways?"checked":"",checkedTolls=p.avoidTolls?"checked":"";
- return "<section class='motorcycle-planner-card'><div class='motorcycle-planner-head'><div><span class='tool-eyebrow'>RIDE MOTORCYCLE ROUTING</span><h2>Disegna il tuo prossimo giro.</h2><p>Calcola un percorso con preferenze pensate per chi viaggia in moto, non soltanto per le auto.</p></div><span class='motorcycle-planner-mark'>"+ico('motorcycle',24)+"</span></div><form id='motorcycle-route-form'><div class='motorcycle-planner-fields'><div class='planner-field'><label for='planner-origin'>PARTENZA</label><div class='planner-input-row'><input id='planner-origin' name='origin' list='planner-place-suggestions' value='"+esc(p.originText||'')+"' placeholder='Es. Riva del Garda' required><button type='button' data-action='planner-use-location' title='Usa la mia posizione' aria-label='Usa la mia posizione'>"+ico('locate',16)+"</button></div></div><div class='planner-field'><label for='planner-via'>TAPPA INTERMEDIA <span>FACOLTATIVA</span></label><input id='planner-via' name='via' list='planner-place-suggestions' value='"+esc(p.viaText||'')+"' placeholder='Es. Passo del Ballino'></div><div class='planner-field'><label for='planner-destination'>DESTINAZIONE</label><input id='planner-destination' name='destination' list='planner-place-suggestions' value='"+esc(p.destinationText||'')+"' placeholder='Es. Madonna di Campiglio' required></div></div><datalist id='planner-place-suggestions'>"+zones.map(z=>"<option value='"+esc(z.name)+"'></option>").join('')+"</datalist><div class='motorcycle-planner-options'><label class='planner-select-label'>STILE DI VIAGGIO<select id='planner-profile' name='profile'>"+profiles+"</select></label><label class='planner-toggle'><input type='checkbox' name='avoidHighways' "+checkedHighways+"><span></span><b>Evita autostrade</b></label><label class='planner-toggle'><input type='checkbox' name='avoidTolls' "+checkedTolls+"><span></span><b>Evita pedaggi</b></label><button class='primary-btn planner-submit' type='submit'>"+ico('route',16)+" Calcola percorso moto</button></div><div class='planner-status' id='motorcycle-route-status' role='status' aria-live='polite'>"+esc(MOTORCYCLE_ROUTE_PROFILES[p.profile||'curvy'].description)+"</div></form><small class='planner-provider-note'>Routing: Valhalla · dati OpenStreetMap. Il server pubblico è condiviso e soggetto a fair use. L'itinerario è una proposta: controlla sempre segnaletica, divieti e condizioni reali.</small></section>";
+ return "<section class='motorcycle-planner-card'><div class='motorcycle-planner-head'><div><span class='tool-eyebrow'>RIDE MOTORCYCLE ROUTING</span><h2>Disegna il tuo prossimo giro.</h2><p>Calcola un percorso con preferenze pensate per chi viaggia in moto, non soltanto per le auto.</p></div><span class='motorcycle-planner-mark'>"+ico('motorcycle',24)+"</span></div><form id='motorcycle-route-form'><div class='motorcycle-planner-fields'><div class='planner-field'><label for='planner-origin'>PARTENZA</label><div class='planner-input-row'><input id='planner-origin' name='origin' list='planner-place-suggestions' value='"+esc(p.originText||'')+"' placeholder='Es. Riva del Garda' required><button type='button' data-action='planner-use-location' title='Usa la mia posizione' aria-label='Usa la mia posizione'>"+ico('locate',16)+"</button></div></div><div class='planner-field'><label for='planner-via'>TAPPA INTERMEDIA <span>FACOLTATIVA</span></label><input id='planner-via' name='via' list='planner-place-suggestions' value='"+esc(p.viaText||'')+"' placeholder='Es. Passo del Ballino'></div><div class='planner-field'><label for='planner-destination'>DESTINAZIONE</label><input id='planner-destination' name='destination' list='planner-place-suggestions' value='"+esc(p.destinationText||'')+"' placeholder='Es. Madonna di Campiglio' required></div></div><datalist id='planner-place-suggestions'>"+zones.map(z=>"<option value='"+esc(z.name)+"'></option>").join('')+"</datalist><div class='motorcycle-planner-options'><label class='planner-select-label'>STILE DI VIAGGIO<select id='planner-profile' name='profile'>"+profiles+"</select></label><label class='planner-toggle'><input type='checkbox' name='avoidHighways' "+checkedHighways+"><span></span><b>Evita autostrade</b></label><label class='planner-toggle'><input type='checkbox' name='avoidTolls' "+checkedTolls+"><span></span><b>Evita pedaggi</b></label><button class='primary-btn planner-submit' type='submit'>"+ico('route',16)+" Calcola percorso moto</button></div><div class='planner-status' id='motorcycle-route-status' role='status' aria-live='polite'>"+esc(MOTORCYCLE_ROUTE_PROFILES[p.profile||'curvy'].description)+"</div></form><small class='planner-provider-note'>Località: GeoNames / OpenStreetMap · routing: Valhalla / OpenStreetMap. I servizi pubblici possono essere temporaneamente limitati. L'itinerario è una proposta: controlla sempre segnaletica, divieti e condizioni reali.</small></section>";
 }
 function setMotorcyclePlannerStatus(message,isError=false){
  const el=$('#motorcycle-route-status');if(!el)return;
  el.textContent=message;el.classList.toggle('error',!!isError);
 }
-async function geocodeMotorcyclePlace(query,bias){
- const params=new URLSearchParams({q:query,limit:'1',lang:'it'});
- if(bias&&Number.isFinite(bias.lat)&&Number.isFinite(bias.lon)){params.set('lat',String(bias.lat));params.set('lon',String(bias.lon));params.set('zoom','8');}
- const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
+
+const plannerGeocodeCache=new Map();
+let nominatimLastRequestAt=0;
+function normalizePlaceName(value){
+ return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('it').replace(/[^a-z0-9]+/g,' ').trim();
+}
+function plannerPlaceDistance(a,b){
+ const rad=x=>x*Math.PI/180,R=6371;
+ const dLat=rad(b.lat-a.lat),dLon=rad(b.lon-a.lon);
+ const h=Math.sin(dLat/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLon/2)**2;
+ return 2*R*Math.asin(Math.sqrt(h));
+}
+function knownRidePlace(query){
+ const normalized=normalizePlaceName(query),base=normalizePlaceName(String(query).split(',')[0]);
+ const known=[];
+ (zones||[]).forEach(z=>known.push({name:z.name,lat:Number(z.lat),lon:Number(z.lon)}));
+ (routes||[]).forEach(route=>(route.stops||[]).forEach(stop=>known.push({name:stop[0],lat:Number(stop[1]),lon:Number(stop[2])})));
+ const found=known.find(p=>normalizePlaceName(p.name)===normalized||normalizePlaceName(p.name)===base);
+ return found?{lat:found.lat,lon:found.lon,label:found.name,provider:'catalogo RIDE'}:null;
+}
+function rankGeocodeResult(item,query,bias){
+ const q=normalizePlaceName(String(query).split(',')[0]);
+ const name=normalizePlaceName(item.name||'');
+ let score=0;
+ if(name===q)score+=1000;
+ else if(name.startsWith(q)||q.startsWith(name))score+=300;
+ if(item.country_code==='it'||item.countryCode==='IT')score+=8;
+ if(bias&&Number.isFinite(Number(item.latitude??item.lat))&&Number.isFinite(Number(item.longitude??item.lon))){
+  const distance=plannerPlaceDistance(bias,{lat:Number(item.latitude??item.lat),lon:Number(item.longitude??item.lon)});
+  score-=Math.min(distance,2000)*0.02;
+ }
+ return score;
+}
+function labelOpenMeteoPlace(item){
+ return [item.name,item.admin2,item.admin1,item.country].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).join(', ');
+}
+function labelPhotonPlace(props,query){
+ return [props.name,props.street,props.housenumber,props.city||props.town||props.village||props.county,props.state,props.country].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).join(', ')||query;
+}
+async function plannerFetchJson(url,timeoutMs=10000){
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeoutMs);
  try{
-  const response=await fetch('https://photon.komoot.io/api/?'+params.toString(),{signal:controller.signal,headers:{'Accept':'application/geo+json'}});
-  if(!response.ok)throw new Error('Ricerca località temporaneamente non disponibile.');
-  const data=await response.json(),feature=data.features?.[0];
-  if(!feature?.geometry?.coordinates)throw new Error('Non trovo la località “'+query+'”. Prova con un nome più preciso.');
-  const [lon,lat]=feature.geometry.coordinates,props=feature.properties||{};
-  const label=[props.name,props.street,props.housenumber,props.city||props.town||props.village||props.county,props.state,props.country].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).join(', ')||query;
-  return {lat:Number(lat),lon:Number(lon),label:label};
+  const response=await fetch(url,{signal:controller.signal,mode:'cors',cache:'no-store',headers:{'Accept':'application/json'}});
+  if(!response.ok)throw new Error('HTTP '+response.status);
+  return await response.json();
  }finally{clearTimeout(timer)}
 }
+async function waitForNominatimSlot(){
+ const delay=Math.max(0,1100-(Date.now()-nominatimLastRequestAt));
+ if(delay)await new Promise(resolve=>setTimeout(resolve,delay));
+ nominatimLastRequestAt=Date.now();
+}
+async function geocodeMotorcyclePlace(query,bias){
+ const clean=String(query||'').trim();
+ if(clean.length<2)throw new Error('Inserisci almeno due caratteri per cercare una località.');
+ const cacheKey=normalizePlaceName(clean);
+ if(plannerGeocodeCache.has(cacheKey))return plannerGeocodeCache.get(cacheKey);
+ const local=knownRidePlace(clean);
+ if(local){plannerGeocodeCache.set(cacheKey,local);return local;}
+ const failures=[];
+ const biasPoint=bias&&Number.isFinite(Number(bias.lat))&&Number.isFinite(Number(bias.lon))?{lat:Number(bias.lat),lon:Number(bias.lon)}:null;
+
+ // Provider 1: Open-Meteo / GeoNames. Reliable for towns, cities and named settlements.
+ try{
+  const params=new URLSearchParams({name:clean,count:'10',language:'it',format:'json'});
+  let data=await plannerFetchJson('https://geocoding-api.open-meteo.com/v1/search?'+params.toString());
+  let results=Array.isArray(data.results)?data.results:[];
+  if(!results.length&&clean.includes(',')){
+   const shortName=clean.split(',')[0].trim();
+   if(shortName.length>=2){
+    const retry=new URLSearchParams({name:shortName,count:'10',language:'it',format:'json'});
+    data=await plannerFetchJson('https://geocoding-api.open-meteo.com/v1/search?'+retry.toString());
+    results=Array.isArray(data.results)?data.results:[];
+   }
+  }
+  if(results.length){
+   results.sort((a,b)=>rankGeocodeResult(b,clean,biasPoint)-rankGeocodeResult(a,clean,biasPoint));
+   const item=results[0],point={lat:Number(item.latitude),lon:Number(item.longitude),label:labelOpenMeteoPlace(item)||clean,provider:'Open-Meteo / GeoNames'};
+   if(Number.isFinite(point.lat)&&Number.isFinite(point.lon)){plannerGeocodeCache.set(cacheKey,point);return point;}
+  }
+  failures.push('località non trovata nel catalogo geografico');
+ }catch(error){failures.push('Open-Meteo non raggiungibile');}
+
+ // Provider 2: Photon / OpenStreetMap. Useful for named places, passes and addresses.
+ try{
+  const params=new URLSearchParams({q:clean,limit:'5',lang:'it'});
+  if(biasPoint){params.set('lat',String(biasPoint.lat));params.set('lon',String(biasPoint.lon));params.set('zoom','8');}
+  const data=await plannerFetchJson('https://photon.komoot.io/api/?'+params.toString());
+  const features=Array.isArray(data.features)?data.features:[];
+  if(features.length){
+   const ranked=features.map(feature=>{
+    const coords=feature.geometry?.coordinates||[];
+    const props=feature.properties||{};
+    const item={name:props.name||props.city||props.county,latitude:Number(coords[1]),longitude:Number(coords[0]),country_code:String(props.countrycode||'').toLowerCase()};
+    return {feature:feature,item:item};
+   }).filter(x=>Number.isFinite(x.item.latitude)&&Number.isFinite(x.item.longitude));
+   ranked.sort((a,b)=>rankGeocodeResult(b.item,clean,biasPoint)-rankGeocodeResult(a.item,clean,biasPoint));
+   if(ranked.length){
+    const chosen=ranked[0],point={lat:chosen.item.latitude,lon:chosen.item.longitude,label:labelPhotonPlace(chosen.feature.properties||{},clean),provider:'Photon / OpenStreetMap'};
+    plannerGeocodeCache.set(cacheKey,point);return point;
+   }
+  }
+  failures.push('nessun risultato Photon');
+ }catch(error){failures.push('Photon non raggiungibile');}
+
+ // Provider 3: Nominatim / OpenStreetMap. Used only on explicit form submission, not autocomplete.
+ try{
+  await waitForNominatimSlot();
+  const params=new URLSearchParams({q:clean,format:'jsonv2',limit:'5','accept-language':'it',addressdetails:'1'});
+  const data=await plannerFetchJson('https://nominatim.openstreetmap.org/search?'+params.toString(),12000);
+  if(Array.isArray(data)&&data.length){
+   const ranked=data.map(item=>({item:item,score:rankGeocodeResult({name:item.name||item.display_name,lat:Number(item.lat),lon:Number(item.lon),country_code:item.address?.country_code},clean,biasPoint)}));
+   ranked.sort((a,b)=>b.score-a.score);
+   const item=ranked[0].item,address=item.address||{};
+   const label=[item.name||address.road||clean,address.city||address.town||address.village||address.municipality||address.county,address.state,address.country].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).join(', ')||item.display_name||clean;
+   const point={lat:Number(item.lat),lon:Number(item.lon),label:label,provider:'Nominatim / OpenStreetMap'};
+   if(Number.isFinite(point.lat)&&Number.isFinite(point.lon)){plannerGeocodeCache.set(cacheKey,point);return point;}
+  }
+  failures.push('nessun risultato OpenStreetMap');
+ }catch(error){failures.push('OpenStreetMap non raggiungibile');}
+
+ if(failures.every(x=>x.includes('non raggiungibile'))){
+  throw new Error('I servizi di ricerca località non rispondono in questo momento. Riprova tra poco oppure controlla la connessione.');
+ }
+ throw new Error('Non trovo “'+clean+'”. Prova ad aggiungere provincia e Paese, ad esempio “Riva del Garda, Trento, Italia”.');
+}
+
 function decodePolyline6(encoded){
  let index=0,lat=0,lon=0,points=[];
  while(index<encoded.length){
@@ -1355,11 +1470,14 @@ async function calculateMotorcycleRoute(form){
   return geocodeMotorcyclePlace(text,state.center);
  };
  button.disabled=true;button.classList.add('loading');
- setMotorcyclePlannerStatus('Sto individuando le località e preparando il percorso motociclistico…');
+ setMotorcyclePlannerStatus('Ricerca della partenza: '+originText+'…');
  try{
   const origin=await resolve(originText,previous.originPoint,previous.originLabel);
+  setMotorcyclePlannerStatus('Partenza trovata. '+(viaText?'Ricerca della tappa intermedia: '+viaText+'…':'Ricerca della destinazione: '+destinationText+'…'));
   const via=viaText?await resolve(viaText,previous.viaPoint,previous.viaLabel):null;
+  if(viaText)setMotorcyclePlannerStatus('Tappa intermedia trovata. Ricerca della destinazione: '+destinationText+'…');
   const destination=await resolve(destinationText,previous.destinationPoint,previous.destinationLabel);
+  setMotorcyclePlannerStatus('Località individuate. Calcolo del percorso motociclistico…');
   const locations=[origin,via,destination].filter(Boolean).map(p=>({lat:p.lat,lon:p.lon,type:'break',name:p.label}));
   const motorcycleOptions={
    use_highways:avoidHighways?0:profile.use_highways,
