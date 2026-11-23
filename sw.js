@@ -1,4 +1,4 @@
-const CACHE='ride-v12-network-first-20261123';
+const CACHE='ride-v13-rider-tools-20261124';
 const RELEASE='v12';
 const FILES=[
   './',
