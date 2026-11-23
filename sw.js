@@ -1,5 +1,5 @@
-const CACHE='ride-v16-motorcycle-planner-20261124';
-const RELEASE='v16';
+const CACHE='ride-v17-geocoding-fallback-20261124';
+const RELEASE='v17';
 const FILES=[
   './',
   './index.html',
