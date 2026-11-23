@@ -26,7 +26,7 @@ jobs:
           const fs = require('node:fs');
           const vm = require('node:vm');
           const html = fs.readFileSync('index.html', 'utf8');
-          const scripts = [...html.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)];
+          const scripts = html.split('<script').slice(1).map(part => part.slice(part.indexOf('>') + 1, part.indexOf('</script>')));
           if (!scripts.length) throw new Error('No script tags found in index.html');
           let checked = 0;
           for (const [index, match] of scripts.entries()) {
