@@ -1,5 +1,5 @@
-const CACHE='ride-v15-gpx-library-backup-20261124';
-const RELEASE='v15';
+const CACHE='ride-v16-motorcycle-planner-20261124';
+const RELEASE='v16';
 const FILES=[
   './',
   './index.html',
