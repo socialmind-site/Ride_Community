@@ -1,5 +1,5 @@
-const CACHE='ride-v14-startup-fix-20261124';
-const RELEASE='v12';
+const CACHE='ride-v15-gpx-library-backup-20261124';
+const RELEASE='v15';
 const FILES=[
   './',
   './index.html',
