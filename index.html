@@ -1101,7 +1101,7 @@ function shareCurrentLocation(){
  },()=>toast('Posizione non disponibile: controlla i permessi del browser.'),{enableHighAccuracy:false,timeout:12000,maximumAge:60000});
 }
 
-function catalogView()
+function catalogView(){
  const country=state.routeCountryFilter||'',region=state.routeRegionFilter||'',province=state.routeProvinceFilter||'',query=(state.routeSearch||'').trim().toLocaleLowerCase('it');
  const countryRoutes=routes.filter(r=>!country||(r.country||'Italia')===country);
  const regionNames=[...new Set(countryRoutes.flatMap(r=>r.regions||[]))].sort((a,b)=>a.localeCompare(b,'it'));
