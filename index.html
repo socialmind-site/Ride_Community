@@ -1439,7 +1439,7 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
   });
   window.addEventListener('load',async()=>{
     try{
-      const registration=await navigator.serviceWorker.register('./sw.js?release=v14',{updateViaCache:'none'});
+      const registration=await navigator.serviceWorker.register('./sw.js?release=v15',{updateViaCache:'none'});
       await registration.update();
       if(registration.waiting)registration.waiting.postMessage({type:'SKIP_WAITING'});
     }catch(error){
