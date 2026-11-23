@@ -535,6 +535,134 @@ html,body{background:var(--bg);color:var(--text)}
  .feed-column *, .page-view *{scroll-behavior:auto!important;transition:none!important;animation:none!important}
 }
 
+
+/* RIDE V12 — balanced mobile navigation and premium visual polish */
+.mobile-appbar{display:none}
+@media(max-width:820px){
+ #app.app-shell:not(.onboarding-shell){padding-top:calc(61px + env(safe-area-inset-top))}
+ .mobile-appbar{
+  position:fixed;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  top:0;left:0;right:0;height:calc(61px + env(safe-area-inset-top));
+  padding:env(safe-area-inset-top) 15px 0;
+  background:rgba(7,13,10,.96);border-bottom:1px solid #2b4033;
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  z-index:890;box-shadow:0 8px 24px #0002;
+ }
+ .mobile-brand{display:flex;align-items:center;gap:9px;min-width:0;border:0;background:transparent;color:#f3f7ef;padding:0;text-align:left}
+ .mobile-brand-mark{width:35px;height:35px;display:grid;place-items:center;border:1px solid #3d573b;border-radius:12px;background:linear-gradient(145deg,#1d3421,#101b13);color:var(--lime);box-shadow:0 5px 16px #0004}
+ .mobile-brand-copy{display:grid;gap:1px}
+ .mobile-brand-copy strong{font-size:21px;line-height:1;font-weight:950;letter-spacing:-1.5px}
+ .mobile-brand-copy strong span{color:var(--lime)}
+ .mobile-brand-copy small{font-size:6px;line-height:1.2;letter-spacing:1.35px;color:#8fa092;font-weight:900}
+ .mobile-appbar-actions{display:flex;align-items:center;gap:8px}
+ .mobile-notification-trigger,.mobile-profile-trigger{width:38px;height:38px;display:grid;place-items:center;flex:none;border-radius:50%;border:1px solid #344b39;background:#132119;color:#dce8dc}
+ .mobile-notification-trigger svg{width:17px;height:17px}
+ .mobile-notification-trigger:active{background:#243a28;color:var(--lime)}
+ .mobile-profile-trigger{border:2px solid #8caf4f;background:linear-gradient(145deg,#d4fa8a,#a6d34e);color:#15210e;box-shadow:0 4px 15px #b8f52e25}
+ .mobile-profile-trigger span{font-size:10px;font-weight:950;letter-spacing:.2px}
+ .mobile-profile-trigger.active{outline:2px solid var(--lime);outline-offset:3px}
+ .mobile-nav{
+  grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;
+  min-height:calc(67px + env(safe-area-inset-bottom));
+  padding:6px 8px calc(6px + env(safe-area-inset-bottom));
+  background:rgba(7,13,10,.97);border-top:1px solid #304534;
+  box-shadow:0 -12px 32px #0006;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+ }
+ .mobile-nav button{height:49px;gap:3px;align-content:center;justify-items:center;color:#91a194;font-size:8px;font-weight:850;position:relative}
+ .mobile-nav button svg{width:19px;height:19px;stroke-width:1.9}
+ .mobile-nav button span{display:block;line-height:1.1}
+ .mobile-nav button.active{color:var(--lime)}
+ .mobile-nav button.active:after{content:"";position:absolute;bottom:1px;width:4px;height:4px;border-radius:50%;background:var(--lime);box-shadow:0 0 8px #c7f36b88}
+ .mobile-nav .nav-add{
+  width:48px;height:48px;min-height:48px;justify-self:center;align-self:start;
+  margin-top:-13px;border:5px solid #0a120d;border-radius:50%;
+  background:linear-gradient(145deg,#d8ff8a,#a9dc4a);color:#14200e;
+  box-shadow:0 7px 22px #b8f52e35,0 0 0 1px #b8f52e66;
+ }
+ .mobile-nav .nav-add svg{width:22px;height:22px;stroke-width:2.3}
+ .mobile-nav .nav-add:after{display:none}
+ .feed-top .icon-btn{display:none}
+ .feed-top{border-bottom:0}
+}
+@media(max-width:560px){
+ #app.app-shell:not(.onboarding-shell){padding-top:calc(57px + env(safe-area-inset-top))}
+ .mobile-appbar{height:calc(57px + env(safe-area-inset-top));padding-left:12px;padding-right:12px}
+ .mobile-brand-mark{width:33px;height:33px;border-radius:11px}
+ .mobile-brand-copy strong{font-size:20px}
+ .mobile-notification-trigger,.mobile-profile-trigger{width:36px;height:36px}
+ .mobile-nav{min-height:calc(64px + env(safe-area-inset-bottom));padding:5px 5px calc(5px + env(safe-area-inset-bottom))}
+ .mobile-nav button{height:47px;font-size:7px}
+ .mobile-nav button svg{width:18px;height:18px}
+ .mobile-nav .nav-add{width:46px;height:46px;margin-top:-12px}
+}
+/* Stronger editorial treatment for the Home and its content cards */
+@media(min-width:821px){
+ .feed-column{padding-top:29px}
+ .feed-top{margin-bottom:21px;padding-bottom:18px}
+ .feed-top .hello{font-size:12px}
+ .feed-top .hello strong{font-size:20px}
+ .hero-card{height:clamp(340px,34vw,455px);border-radius:28px}
+ .hero-content{bottom:clamp(30px,4vw,48px);left:clamp(30px,4vw,54px);width:min(690px,75%)}
+ .hero-card h1{font-size:clamp(42px,4.2vw,62px);letter-spacing:-2.8px;max-width:660px}
+ .hero-card p{font-size:14px;max-width:480px}
+ .hero-cta{padding:13px 19px;font-size:11px}
+ .quick-grid{margin-top:17px;margin-bottom:35px}
+ .quick-action{min-height:91px;padding:14px 15px;border-radius:18px}
+ .quick-action .quick-icon{width:44px;height:44px;border-radius:14px}
+ .quick-action span:last-child{font-size:10px}
+ .feed-section{margin-top:35px}
+ .section-heading h2{font-size:19px}
+ .route-row img{height:178px}
+ .route-row .route-copy{padding:15px 16px 17px}
+ .route-row strong{font-size:13px}
+ .route-row small{font-size:9px}
+ .ride-preview{padding:12px;grid-template-columns:150px minmax(0,1fr)}
+ .ride-preview img{width:150px;height:120px}
+}
+@media(max-width:820px){
+ .hero-card{height:285px;border-radius:23px}
+ .hero-card:before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse at 78% 12%,#c7f36b28,transparent 40%),linear-gradient(135deg,#07140b22,transparent 65%)}
+ .hero-card img{object-position:54% center;filter:saturate(1.13) contrast(1.04);transition:transform .7s ease}
+ .hero-content{bottom:25px;width:min(540px,84%)}
+ .hero-kicker{letter-spacing:1.8px}
+ .hero-card h1{font-size:clamp(31px,6vw,43px);letter-spacing:-1.7px}
+ .hero-card p{font-size:10px;max-width:330px}
+ .hero-tag{border-color:#d8f6ad55;background:#07120ee8;box-shadow:0 9px 26px #0005}
+ .quick-grid{grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:13px 0 27px}
+ .quick-action:nth-child(1),.quick-action:nth-child(2){grid-column:span 3}
+ .quick-action:nth-child(n+3){grid-column:span 2}
+ .quick-action:last-child{grid-column:span 2}
+ .quick-action{min-height:74px;justify-content:flex-start;gap:9px;padding:10px;border-radius:15px}
+ .quick-action .quick-icon{width:36px;height:36px;border-radius:11px}
+ .quick-action .quick-icon svg{width:19px;height:19px}
+ .quick-action span:last-child{font-size:8px;line-height:1.25}
+ .route-row{box-shadow:0 8px 22px #0002}
+ .route-row img{filter:saturate(1.08)}
+ .section-heading h2{font-size:15px}
+}
+@media(max-width:560px){
+ .hero-card{height:260px;border-radius:20px}
+ .hero-content{left:17px;right:15px;bottom:20px;width:auto}
+ .hero-card h1{font-size:clamp(29px,8vw,36px);letter-spacing:-1.55px}
+ .hero-card p{font-size:9px;max-width:275px}
+ .hero-tag{max-width:135px;padding:8px 9px}
+ .quick-grid{gap:7px;margin-top:11px;margin-bottom:23px}
+ .quick-action{min-height:68px;padding:8px;gap:7px;border-radius:13px}
+ .quick-action .quick-icon{width:32px;height:32px;border-radius:10px}
+ .quick-action .quick-icon svg{width:17px;height:17px}
+ .quick-action span:last-child{font-size:7px}
+ .feed-section{margin-top:24px}
+ .section-heading h2{font-size:13px}
+ .ride-preview{border-radius:15px}
+}
+@media(hover:hover){
+ .hero-card:hover img{transform:scale(1.035)}
+ .catalog-card:hover,.group-card:hover,.diary-card:hover{transform:translateY(-3px)}
+}
+@media(prefers-reduced-motion:reduce){
+ .hero-card img{transition:none!important}
+}
+
 </style>
   <link rel="icon" type="image/svg+xml" href="./icon.svg">
   <link rel="manifest" href="./manifest.webmanifest">
@@ -656,7 +784,7 @@ function routeById(id){return routes.find(r=>r.id===id)||routes[0]}
 function selectedRoute(){return routeById(state.selectedRoute)}
 function photo(route){return route.photo}
 function sideNav(){const links=[['home','home','Home'],['map','map','Community Map'],['events','calendar','Uscite'],['routes','route','Itinerari'],['diary','route2','Diario'],['community','group','Gruppi'],['messages','chat','Chat'],['notifications','bell','Notifiche'],['saved','bookmark','Salvati']];return `<aside class="sidebar"><div class="brand"><span class="brand-mark">${ico('mountain',23)}</span><div class="brand-name-wrap"><div class="brand-name">RIDE<span>.</span></div><div class="brand-sub">THE RIDER COMMUNITY</div></div></div><nav class="side-nav">${links.map(([v,i,t])=>`<button class="side-link ${state.view===v?'active':''}" data-view="${v}">${ico(i,18)}<span>${t}</span>${v==='messages'?'<b class="badge">3</b>':''}</button>`).join('')}</nav><div class="side-spacer"></div><div class="side-profile"><span class="avatar lime">${avatarInitials()}</span><div class="profile-copy"><strong>${esc(state.profile.name||'Rider')}</strong><small>${esc(state.profile.role||'Community RIDE')}</small></div></div><button class="settings-link" data-view="profile">${ico('settings',17)}<span>Il mio profilo</span></button><a class="side-data-credit" href="https://vehiclesdb.com" target="_blank" rel="noopener">Dati moto: VehiclesDB</a></aside>`}
-function mobileNav(){return `<nav class="mobile-nav"><button data-view="home" class="${state.view==='home'?'active':''}">${ico('home')}Home</button><button data-view="map" class="${state.view==='map'?'active':''}">${ico('map')}Persone</button><button class="nav-add" data-action="create-ride" aria-label="Crea un'uscita">${ico('plus',22)}</button><button data-view="messages" class="${state.view==='messages'?'active':''}">${ico('chat')}Chat</button><button data-view="diary" class="${state.view==='diary'?'active':''}">${ico('route2')}Diario</button><button data-view="profile" class="${state.view==='profile'?'active':''}">${ico('user')}Profilo</button></nav>`}
+function mobileNav(){return `<header class="mobile-appbar"><button class="mobile-brand" type="button" data-view="home" aria-label="RIDE, torna alla Home"><span class="mobile-brand-mark">${ico('mountain',20)}</span><span class="mobile-brand-copy"><strong>RIDE<span>.</span></strong><small>THE RIDER COMMUNITY</small></span></button><div class="mobile-appbar-actions"><button class="mobile-notification-trigger" type="button" data-view="notifications" aria-label="Notifiche">${ico('bell',17)}</button><button class="mobile-profile-trigger ${state.view==='profile'?'active':''}" type="button" data-view="profile" aria-label="Apri il profilo"><span>${avatarInitials()}</span></button></div></header><nav class="mobile-nav" aria-label="Navigazione principale"><button data-view="home" class="${state.view==='home'?'active':''}" aria-label="Home">${ico('home')}<span>Home</span></button><button data-view="map" class="${state.view==='map'?'active':''}" aria-label="Mappa community">${ico('map')}<span>Mappa</span></button><button class="nav-add" data-action="create-ride" aria-label="Crea un'uscita">${ico('plus',22)}</button><button data-view="messages" class="${state.view==='messages'?'active':''}" aria-label="Chat">${ico('chat')}<span>Chat</span></button><button data-view="diary" class="${state.view==='diary'?'active':''}" aria-label="Diario viaggi">${ico('route2')}<span>Diario</span></button></nav>`}
 function routeRow(r){return `<article class="route-row ${state.selectedRoute===r.id?'selected':''}" data-route-select="${r.id}"><img src="${photo(r)}" alt="${esc(r.name)}" loading="lazy"><div class="route-copy"><strong>${esc(r.name)}</strong><small>${r.distance} km · ${esc(r.duration)} · ${esc(r.level)}</small><div class="rating">★ ${r.rating} <span style="color:#7f8e90;font-weight:600">(${r.reviews})</span></div></div><button class="heart ${state.favorites.includes(r.id)?'saved':''}" data-favorite="${r.id}" aria-label="Salva itinerario">${ico('heart',16)}</button></article>`}
 function feedColumn(){const r=selectedRoute();return `<section class="feed-column"><div class="feed-top"><div class="hello">Pronto per una nuova avventura?<strong>La strada ti aspetta.</strong></div><button class="icon-btn" data-view="notifications" aria-label="Notifiche">${ico('bell')}</button></div><div class="hero-card"><img src="./assets/dolomites-road.webp" alt="Motociclista su una strada alpina"><div class="hero-content"><div class="hero-kicker">RIDE · MOTORCYCLE COMMUNITY</div><h1>Trova compagni,<br>vivi la strada <span style="color:var(--lime)">insieme.</span></h1><p>Organizza uscite, scopri nuovi itinerari e condividi la tua passione.</p><button class="hero-cta" data-view="map">${ico('compass',14)} Esplora la mappa ${ico('arrow',14)}</button></div><div class="hero-tag"><small>ROAD TRIP IN EVIDENZA</small><strong>${esc(r.name)}</strong></div></div><div class="quick-grid"><button class="quick-action" data-action="find-riders"><span class="quick-icon">${ico('group',25)}</span><span>Trova<br>compagni</span></button><button class="quick-action" data-action="create-ride"><span class="quick-icon">${ico('calendar',25)}</span><span>Crea<br>uscita</span></button><button class="quick-action" data-view="routes"><span class="quick-icon">${ico('route',25)}</span><span>Esplora<br>itinerari</span></button><button class="quick-action" data-action="find-passenger"><span class="quick-icon">${ico('motorcycle',25)}</span><span>Cerca<br>zavorrina/o</span></button><button class="quick-action" data-view="diary"><span class="quick-icon">${ico('route2',25)}</span><span>Diario<br>viaggi</span></button></div><section class="feed-section"><div class="section-heading"><h2>${ico('mountain')} Road Trip consigliati</h2><button data-view="routes">Vedi tutti ›</button></div><div class="route-list">${[routes[1],routes[0],routes[3]].map(routeRow).join('')}</div></section><section class="feed-section"><div class="section-heading"><h2>${ico('group')} Uscite in programma</h2><button data-view="events">Vedi tutte ›</button></div><div class="ride-preview"><img src="./assets/garda-road.webp" alt="Giro in moto sul Lago di Garda"><div><strong>Giro del Lago di Garda · Domenica</strong><small>${ico('pin',11)} Riva del Garda · 8 partecipanti</small><div class="ride-bottom"><span class="seat-pill">2 posti liberi</span><button class="join-mini" data-action="join-garda">Partecipa</button></div></div></div></section></section>`}
 
