@@ -1287,6 +1287,7 @@ document.addEventListener('submit',e=>{if(e.target.id==='maintenance-form'){e.pr
 
 // Route changes from catalog: selecting a trip from a page opens its real map.
 document.addEventListener('click',e=>{const b=e.target.closest('[data-action="open-route-map"]');if(b){state.selectedRoute=b.dataset.route;state.view='routes';render()}});
+registerImportedGpxRoute();
 render();
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
   navigator.serviceWorker.addEventListener('controllerchange',()=>{
