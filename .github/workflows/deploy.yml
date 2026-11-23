@@ -20,6 +20,23 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Validate inline JavaScript
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const vm = require('node:vm');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const scripts = [...html.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)];
+          if (!scripts.length) throw new Error('No script tags found in index.html');
+          let checked = 0;
+          for (const [index, match] of scripts.entries()) {
+            const source = match[1].trim();
+            if (!source) continue;
+            new vm.Script(source, { filename: 'index.html:inline-script-' + (index + 1) });
+            checked++;
+          }
+          console.log('Validated ' + checked + ' inline script(s).');
+          NODE
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3
         with:
