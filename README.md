@@ -60,3 +60,12 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - Indicazione successiva disponibile per gli itinerari calcolati con Valhalla; le istruzioni vocali sono opzionali e richiedono supporto speechSynthesis del browser.
 - Le sessioni concluse vengono salvate localmente con traccia GPS semplificata, distanza, durata e velocità media/massima; possono essere esportate in GPX e sono incluse nel backup JSON.
 - Il GPS funziona solo con permesso esplicito e mentre la pagina è attiva. Non è un navigatore certificato, non esegue rerouting automatico e non garantisce tracking in background. Seguire sempre segnaletica e norme stradali.
+
+
+## RIDE V20 — Pianificatore viaggi multi-giorno
+
+- Creazione di viaggi personali con titolo, date, partenza, destinazione e note generali.
+- Ogni viaggio contiene giornate separate con data, itinerario RIDE o GPX, punto di partenza, arrivo/pernottamento, orario, budget e note/soste.
+- Riepilogo automatico di giornate, chilometri pianificati e budget stimato.
+- Promemoria locali per le giornate di viaggio nei 14 giorni successivi.
+- I viaggi sono salvati in locale e inclusi nel backup JSON; non vengono sincronizzati tra dispositivi.
