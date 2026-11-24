@@ -1371,8 +1371,8 @@ function weatherRiskAlerts(results){
   else if(Number(w.rain)>=60)add('caution','Pioggia possibile',where+' · probabilità '+Math.round(w.rain)+'%','rain-'+where);
   if(Number(w.gust)>=60)add('high','Raffiche di vento forti',where+' · raffiche fino a '+Math.round(w.gust)+' km/h','gust-high-'+where);
   else if(Number(w.wind)>=35)add('caution','Vento sostenuto',where+' · vento previsto '+Math.round(w.wind)+' km/h','wind-'+where);
-  if(Number.isFinite(Number(w.visibility))&&Number(w.visibility)<1000)add('high','Visibilità ridotta',where+' · circa '+Math.round(w.visibility)+' m','visibility-'+where);
-  if(Number.isFinite(Number(w.temperature))&&Number(w.temperature)<=2&&Number(w.precipitation)>0)add('caution','Temperatura prossima allo zero',where+' · possibile fondo freddo o scivoloso','cold-'+where);
+  if(w.visibility!=null&&Number.isFinite(Number(w.visibility))&&Number(w.visibility)<1000)add('high','Visibilità ridotta',where+' · circa '+Math.round(w.visibility)+' m','visibility-'+where);
+  if(w.temperature!=null&&w.precipitation!=null&&Number.isFinite(Number(w.temperature))&&Number(w.temperature)<=2&&Number(w.precipitation)>0)add('caution','Temperatura prossima allo zero',where+' · possibile fondo freddo o scivoloso','cold-'+where);
  });
  return alerts;
 }
@@ -1746,7 +1746,7 @@ function updateRideModeUI(){
  if(stop)stop.disabled=!session;
  if(liveBadge){liveBadge.textContent=session?'GPS ATTIVO':'GPS NON ATTIVO';liveBadge.classList.toggle('live',!!session)}
  if(voice){voice.disabled=!session||!('speechSynthesis'in window);voice.classList.toggle('active',!!session?.voiceEnabled);voice.textContent=session?.voiceEnabled?'Voce attiva':'Attiva voce'}
- if(routeSelect){routeSelect.disabled=!!session;if(state.selectedRoute&&routeSelect.value!==state.selectedRoute&&Array.from(routeSelect.options).some(o=>o.value===state.selectedRoute))routeSelect.value=state.selectedRoute;}
+ if(routeSelect){routeSelect.disabled=!!session;if(state.selectedRoute&&!Array.from(routeSelect.options).some(o=>o.value===state.selectedRoute)){const route=routeById(state.selectedRoute);if(route)routeSelect.add(new Option(route.name+' · '+route.distance+' km',route.id))}if(state.selectedRoute)routeSelect.value=state.selectedRoute;}
 }
 function speakRideInstruction(text){
  if(!('speechSynthesis'in window)||!text)return;
@@ -1811,7 +1811,7 @@ async function rerouteRideFromCurrentPosition(){
   state.importedGpx=record;
   registerImportedGpxRoute();
   state.selectedRoute=record.id;
-  session.routeId=record.id;session.offRouteCount=0;session.lastAnnouncedInstruction=null;session.rerouting=false;
+  session.routeId=record.id;session.offRouteCount=0;session.lastNearest={index:0,progress:0,distanceKm:0};session.lastAnnouncedInstruction=null;session.rerouting=false;
   routeGeometry=record.latlngs;routeReal=true;
   if(mapObject){
    mapObject.setRoute(routeGeometry,record.stops);
