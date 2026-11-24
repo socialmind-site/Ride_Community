@@ -154,3 +154,4 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - Resize e adattamento del tracciato vengono eseguiti dopo il rendering del modal, evitando inizializzazioni su contenitori ancora nascosti o a dimensione zero.
 - Gli errori di caricamento cartografico non interrompono il dettaglio del viaggio: l'elenco delle soste resta disponibile e viene mostrato un messaggio di fallback.
 - Aggiornata la cache PWA alla V29.
+- Fix aggiuntivo V29.1: la chiusura del modal invalida anche le inizializzazioni pendenti; una mappa precedente non può cancellare lo stato di una nuova apertura dello stesso viaggio.

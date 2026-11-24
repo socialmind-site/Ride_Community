@@ -210,8 +210,10 @@
   }
   function cleanupMap(){
     mapToken++;
-    if(activeMap?.map){try{activeMap.map.remove()}catch(error){}}
+    pendingTripId=null;
+    const previous=activeMap;
     activeMap=null;
+    if(previous?.map){try{previous.map.remove()}catch(error){}}
   }
   async function initTripMap(trip){
     const panel=document.querySelector('[data-v28-map-panel="'+CSS.escape(String(trip.id))+'"]');
@@ -289,7 +291,7 @@
         order.innerHTML=fallback.length?fallback.map(item=>'<article class="trip-v28-order-item"><span class="trip-v28-order-number">'+(item.index+1)+'.'+(item.n+1)+'</span><span class="trip-v28-order-copy"><strong>'+esc(item.stop.name)+'</strong><small>'+esc(categoryLabel(item.stop.category))+' · '+esc(formatDiaryDate(item.day.date))+'</small></span><span class="trip-v28-order-actions"><a href="'+googleMapsUrl(item.stop)+'" target="_blank" rel="noopener noreferrer">Apri Maps ↗</a></span></article>').join(''):'<div class="trip-v28-order-empty">Nessuna sosta selezionata.</div>';
       }
     }finally{
-      if(pendingTripId===String(trip.id))pendingTripId=null;
+      if(token===mapToken&&pendingTripId===String(trip.id))pendingTripId=null;
     }
   }
   function ensureMapPanel(){

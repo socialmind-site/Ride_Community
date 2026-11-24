@@ -1,5 +1,5 @@
-const CACHE='ride-v29-stable-trip-map-20261124';
-const RELEASE='v29';
+const CACHE='ride-v29-stable-trip-map-fix1-20261124';
+const RELEASE='v29.1';
 const FILES=[
   './',
   './index.html',
