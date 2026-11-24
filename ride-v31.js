@@ -12,6 +12,7 @@
     return{lat:Math.atan(Math.sinh(Math.PI*(1-2*y/size)))*180/Math.PI,lon:x/size*360-180};
   }
   function safe(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+  function indexSafe(html){return safe(String(html||'').replace(/<[^>]+>/g,''))}
   function attr(html,name){
     const match=String(html||'').match(new RegExp(name+'="([^"]*)"'));
     return match?match[1]:'';
@@ -60,6 +61,7 @@
     setView(center,zoom){this.center={lat:Number(center[0]),lon:Number(center[1])};this.zoom=Math.max(3,Math.min(18,Math.round(Number(zoom)||6)));this.schedule();return this}
     fitBounds(bounds,options){
       const width=this.canvas.clientWidth||320,height=this.canvas.clientHeight||270;
+      this._fitBounds=bounds;
       const result=fit(this.center,bounds,width,height,options?.maxZoom||14);
       this.center=result.center;this.zoom=result.zoom;this.schedule();return this;
     }
@@ -102,7 +104,8 @@
           const sx=w/2+x,sy=h/2+p.y-center.y,icon=layer.icon?.options||{},html=icon.html||'<span>•</span>';
           if(sx< -35||sx>w+35||sy< -35||sy>h+35)return;
           const attrs=['data-v30-place-card="1"','data-v30-day-id="'+safe(attr(layer.popup,'data-v30-day-id'))+'"','data-v30-category="'+safe(attr(layer.popup,'data-v30-category'))+'"','data-v30-poi-id="'+safe(attr(layer.popup,'data-v30-poi-id'))+'"'].join(' ');
-          markers.push('<button type="button" class="native-map-marker" aria-label="Apri scheda della sosta" '+attrs+' style="left:'+sx+'px;top:'+sy+'px">'+html+'</button>');
+          const fill=(String(html).match(/background:([^;\"]+)/)||[])[1]||'#b8f52e';
+          markers.push('<button type="button" class="native-map-marker" aria-label="Apri scheda della sosta" '+attrs+' style="left:'+sx+'px;top:'+sy+'px;background:'+safe(fill)+'">'+indexSafe(html)+'</button>');
         }
       });
       const content='<div class="native-map-content"><div class="native-map-tiles">'+tiles.join('')+'</div><svg class="native-map-svg" viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none">'+paths.join('')+'</svg><div class="native-map-markers">'+markers.join('')+'</div></div>';
@@ -148,10 +151,5 @@
       .native-map-attribution a{color:#27352a}
     `;document.head.appendChild(style);
   }
-  document.addEventListener('click',event=>{
-    const action=event.target.closest('[data-native-map-action]');
-    if(!action)return;
-    event.preventDefault();event.stopPropagation();
-  },true);
   window.RIDE_NATIVE_MAP=true;
 })();

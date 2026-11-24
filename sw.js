@@ -1,5 +1,5 @@
-const CACHE='ride-v30-1-leaflet-place-cards-20261124';
-const RELEASE='v30.1';
+const CACHE='ride-v31-native-raster-map-20261124';
+const RELEASE='v31';
 const FILES=[
   './',
   './index.html',
@@ -7,6 +7,7 @@ const FILES=[
   './europe-routes.js',
   './ride-v26.js',
   './ride-v30.js',
+  './ride-v31.js',
   './manifest.webmanifest',
   './icon.svg',
   './assets/garda-road.webp',

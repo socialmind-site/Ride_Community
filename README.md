@@ -174,3 +174,13 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - I risultati conservano tag e identificativi OSM per caricare ulteriori dettagli quando l'utente apre una scheda. Le informazioni possono essere incomplete o non aggiornate; verificare direttamente con l'attività.
 - I dati del viaggio restano locali. Mappa e ricerca richiedono connessione Internet; i tile OpenStreetMap sono attribuiti correttamente.
 - RIDE V30.1: aggiunti i pulsanti “Vedi scheda” anche ai marker della mappa e visualizzazione dei punteggi/classificazioni OSM quando effettivamente disponibili nei dati.
+
+## RIDE V31 — Motore cartografico nativo
+
+- Sostituito il caricamento di Leaflet con un adattatore cartografico interno compatibile con le funzioni di disegno già usate dal pianificatore: nessun download di librerie di mappe, nessun WebGL.
+- La base cartografica usa direttamente le tile raster standard di OpenStreetMap; tracciati, marker, zoom, centratura e trascinamento sono renderizzati da RIDE in SVG/HTML.
+- I marker mantengono il collegamento alla scheda informativa del luogo.
+- La mappa appare immediatamente con i punti dell'itinerario e le soste già salvate; il tracciato stradale dettagliato viene aggiornato in background quando OSRM risponde.
+- Aggiunti controlli zoom, centratura e trascinamento touch/puntatore.
+- La scheda del viaggio non dipende più dalla disponibilità di CDN JavaScript per il motore cartografico.
+- Aggiornata la cache PWA alla V31.
