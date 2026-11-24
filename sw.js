@@ -1,5 +1,5 @@
-const CACHE='ride-v17-geocoding-fallback-20261124';
-const RELEASE='v17';
+const CACHE='ride-v18-route-intelligence-20261124';
+const RELEASE='v18';
 const FILES=[
   './',
   './index.html',
