@@ -1,5 +1,5 @@
-const CACHE='ride-v26-smart-travel-20261124';
-const RELEASE='v26';
+const CACHE='ride-v27-trip-stop-save-20261124';
+const RELEASE='v27';
 const FILES=[
   './',
   './index.html',

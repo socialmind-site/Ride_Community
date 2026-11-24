@@ -38,6 +38,21 @@
   .trip-v26-card-breakdown{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
   .trip-v26-card-breakdown span{padding:5px 7px;border:1px solid #2d4233;border-radius:7px;background:#0c1710;color:#9eaea1;font-size:7px}
   .trip-v26-card-breakdown b{color:#e7f1e1;font-weight:900}
+  .trip-v26-selected-stops{margin:10px 0;padding:10px;border:1px solid #40583a;border-radius:12px;background:#0c1710}
+  .trip-v26-selected-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+  .trip-v26-selected-head strong{font-size:9px;color:#eaf3e5}
+  .trip-v26-selected-head span{font-size:7px;color:var(--lime);font-weight:900}
+  .trip-v26-selected-empty{padding:8px;border:1px dashed #344a38;border-radius:8px;color:#91a293;font-size:7px;line-height:1.5}
+  .trip-v26-selected-list{display:grid;gap:6px}
+  .trip-v26-selected-stop{display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px;border:1px solid #2d4233;border-radius:9px;background:#111e15}
+  .trip-v26-selected-stop-icon{width:25px;height:25px;display:grid;place-items:center;border-radius:7px;background:#253a25;font-size:12px}
+  .trip-v26-selected-stop-copy{min-width:0}
+  .trip-v26-selected-stop-copy strong{display:block;font-size:8px;overflow-wrap:anywhere}
+  .trip-v26-selected-stop-copy small{display:block;margin-top:3px;color:#91a293;font-size:7px}
+  .trip-v26-selected-stop-actions{display:flex;gap:5px;align-items:center}
+  .trip-v26-selected-stop-actions a,.trip-v26-selected-stop-actions button{min-height:26px;padding:0 7px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #40583a;border-radius:7px;background:#1b2d1c;color:var(--lime);font-size:7px;font-weight:900;text-decoration:none;white-space:nowrap}
+  .trip-v26-selected-stop-actions button{border-color:#60403a;background:#2b1c18;color:#f0b0a8}
+  .trip-v26-result-actions button:disabled{opacity:.65;background:#253622;border-color:#40583a;color:#b8d78b;cursor:default}
   @media(max-width:820px){.trip-v26-budget{grid-template-columns:repeat(3,minmax(0,1fr))}.trip-v26-day-panel{margin-left:0}.trip-v26-day-details{grid-template-columns:1fr}}
   @media(max-width:560px){.trip-v26-section{padding:11px}.trip-v26-estimate{grid-template-columns:repeat(2,minmax(0,1fr))}.trip-v26-budget{grid-template-columns:repeat(2,minmax(0,1fr));padding:9px}.trip-v26-budget .total{grid-column:1/-1}.trip-v26-day-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.trip-v26-day-panel{padding:9px}.trip-v26-result{grid-template-columns:25px minmax(0,1fr)}.trip-v26-result-actions{grid-column:2;justify-content:flex-start}.trip-v26-result-icon{width:24px;height:24px}}
   `;
@@ -126,7 +141,7 @@
     return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q);
   }
   function normalizePoi(item,category,point){
-    return{id:String(item.id||item.type+'-'+item.id),name:item.tags?.name||item.tags?.brand||item.tags?.operator||category,category,lat:point.lat,lon:point.lon};
+    return{id:String(item.type||'osm')+'/'+String(item.id),name:item.tags?.name||item.tags?.brand||item.tags?.operator||category,category,lat:point.lat,lon:point.lon};
   }
   async function searchStops(dayId,category,button){
     const trip=(state.tripPlans||[]).find(t=>(t.days||[]).some(d=>String(d.id)===String(dayId)));
@@ -163,34 +178,89 @@
     finally{button.disabled=false}
   }
   function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+  function stopCategoryLabel(category){
+    return category==='fuel'?'Distributore':category==='food'?'Ristorante / ristoro':category==='lodging'?'Pernottamento':'Sosta';
+  }
+  function stopCategoryIcon(category){
+    return category==='fuel'?'⛽':category==='food'?'🍽':category==='lodging'?'🛏':'⌖';
+  }
+  function stopResultsMarkup(day,category){
+    const items=day.stops?.[category]||[];
+    if(!items.length)return '';
+    return items.map(item=>{
+      const added=(day.stopSelections||[]).some(saved=>String(saved.id)===String(item.id));
+      return '<article class="trip-v26-result"><span class="trip-v26-result-icon">'+stopCategoryIcon(category)+'</span><span class="trip-v26-result-copy"><strong>'+escapeHtml(item.name)+'</strong><small>'+stopCategoryLabel(category)+' · OpenStreetMap</small></span><span class="trip-v26-result-actions"><a target="_blank" rel="noopener" href="'+openMapSearch('',item)+'">Apri mappa ↗</a><button type="button" '+(added?'disabled':'')+' data-v26-add-stop="'+escapeHtml(day.id)+'" data-category="'+category+'" data-poi-id="'+escapeHtml(item.id)+'">'+(added?'✓ Aggiunta':'Aggiungi')+'</button></span></article>';
+    }).join('');
+  }
   function renderStopResults(dayId,category){
     const trip=(state.tripPlans||[]).find(t=>(t.days||[]).some(d=>String(d.id)===String(dayId)));
     const day=trip?.days.find(d=>String(d.id)===String(dayId));
     const box=document.querySelector('[data-v26-results="'+CSS.escape(String(dayId))+'"]');
     if(!day||!box)return;
-    const items=day.stops?.[category]||[];
-    box.innerHTML=items.length?items.map(item=>'<article class="trip-v26-result"><span class="trip-v26-result-icon">'+(category==='fuel'?'⛽':category==='food'?'🍽':'🛏')+'</span><span class="trip-v26-result-copy"><strong>'+escapeHtml(item.name)+'</strong><small>'+escapeHtml(item.category)+' · OpenStreetMap</small></span><span class="trip-v26-result-actions"><a target="_blank" rel="noopener" href="'+openMapSearch('',item)+'">Apri mappa ↗</a><button type="button" data-v26-add-stop="'+dayId+'" data-category="'+category+'" data-poi-id="'+escapeHtml(item.id)+'">Aggiungi</button></span></article>').join(''):'<div class="trip-v26-empty">Nessun luogo trovato per questa categoria.</div>';
+    box.innerHTML=stopResultsMarkup(day,category)||'<div class="trip-v26-empty">Nessun luogo trovato per questa categoria.</div>';
+  }
+  function selectedStopsMarkup(day){
+    const items=day.stopSelections||[];
+    const content=items.length?'<div class="trip-v26-selected-list">'+items.map(item=>{
+      const category=item.category||'other';
+      return '<article class="trip-v26-selected-stop"><span class="trip-v26-selected-stop-icon">'+stopCategoryIcon(category)+'</span><span class="trip-v26-selected-stop-copy"><strong>'+escapeHtml(item.name||'Sosta salvata')+'</strong><small>'+stopCategoryLabel(category)+' · Aggiunta a questa giornata</small></span><span class="trip-v26-selected-stop-actions"><a target="_blank" rel="noopener" href="'+openMapSearch('',item)+'">Mappa ↗</a><button type="button" data-v26-remove-stop="'+escapeHtml(day.id)+'" data-poi-id="'+escapeHtml(item.id)+'">Rimuovi</button></span></article>';
+    }).join('')+'</div>':'<div class="trip-v26-selected-empty">Ancora nessuna sosta aggiunta. Cerca un distributore, un ristorante o un alloggio e premi “Aggiungi”: lo ritroverai qui anche quando riapri il viaggio.</div>';
+    return '<section class="trip-v26-selected-stops"><div class="trip-v26-selected-head"><strong>Soste salvate nella giornata</strong><span>'+items.length+' '+(items.length===1?'SOSTA':'SOSTE')+'</span></div>'+content+'</section>';
+  }
+  function refreshTripDetail(trip){
+    const modal=document.querySelector('#modal-root .modal');
+    if(!modal||!trip)return;
+    let content=modal.querySelector('[data-v26-trip-content="'+CSS.escape(String(trip.id))+'"]');
+    if(!content){
+      enrichTripDetail();
+      content=modal.querySelector('[data-v26-trip-content="'+CSS.escape(String(trip.id))+'"]');
+    }
+    if(!content)return;
+    const template=document.createElement('template');
+    template.innerHTML=enrichTripMarkup(trip);
+    const replacement=template.content.firstElementChild;
+    if(replacement)content.replaceWith(replacement);
   }
   function addStop(dayId,category,poiId){
     const trip=(state.tripPlans||[]).find(t=>(t.days||[]).some(d=>String(d.id)===String(dayId)));
     const day=trip?.days.find(d=>String(d.id)===String(dayId)),item=day?.stops?.[category]?.find(p=>String(p.id)===String(poiId));
-    if(!day||!item)return;
+    if(!day||!trip||!item)return;
     day.stopSelections=day.stopSelections||[];
-    if(!day.stopSelections.some(p=>p.id===item.id))day.stopSelections.push(item);
-    if(category==='fuel')day.fuelStopCount=n(day.fuelStopCount)+1;
+    if(day.stopSelections.some(saved=>String(saved.id)===String(item.id))){
+      toast('Questa sosta è già presente nella giornata.');
+      return;
+    }
+    day.stopSelections.push({...item,category:category});
+    if(category==='fuel')day.fuelStopCount=day.stopSelections.filter(saved=>saved.category==='fuel').length;
     if(category==='food')day.mealPlace=item.name;
     if(category==='lodging')day.overnight=item.name;
-    save();render();
-    toast('Sosta aggiunta alla giornata.');
+    if(!save()){toast('Non riesco a salvare la sosta: spazio locale insufficiente.');return}
+    refreshTripDetail(trip);
+    refreshTripBudget(trip.id);
+    toast('Sosta aggiunta e salvata nella giornata.');
+  }
+  function removeStop(dayId,poiId){
+    const trip=(state.tripPlans||[]).find(t=>(t.days||[]).some(d=>String(d.id)===String(dayId)));
+    const day=trip?.days.find(d=>String(d.id)===String(dayId));
+    if(!day||!trip)return;
+    const removed=(day.stopSelections||[]).find(item=>String(item.id)===String(poiId));
+    if(!removed)return;
+    day.stopSelections=day.stopSelections.filter(item=>String(item.id)!==String(poiId));
+    if(removed.category==='fuel')day.fuelStopCount=day.stopSelections.filter(item=>item.category==='fuel').length;
+    if(removed.category==='food')day.mealPlace=[...day.stopSelections].reverse().find(item=>item.category==='food')?.name||'';
+    if(removed.category==='lodging')day.overnight=[...day.stopSelections].reverse().find(item=>item.category==='lodging')?.name||'';
+    if(!save()){toast('Non riesco ad aggiornare le soste salvate.');return}
+    refreshTripDetail(trip);
+    refreshTripBudget(trip.id);
+    toast('Sosta rimossa dalla giornata.');
   }
   function updateFuelFields(dayId,field,value){
     const trip=(state.tripPlans||[]).find(t=>(t.days||[]).some(d=>String(d.id)===String(dayId)));
-    const day=trip?.days.find(d=>String(d.id)===String(dayId));if(!day)return;
+    const day=trip?.days.find(d=>String(d.id)===String(dayId));if(!day||!trip)return;
     day.fuelPlan=day.fuelPlan||{};
     day.fuelPlan[field]=n(value);
     save();
-    const root=document.querySelector('[data-v26-day="'+CSS.escape(String(dayId))+'"]');
-    if(root)renderFuelSummary(root,day,trip);
+    refreshTripDetail(trip);
     refreshTripBudget(trip.id);
   }
   function renderFuelSummary(root,day,trip){
@@ -210,17 +280,18 @@
     const route=routes.find(r=>r.id===day.routeId),fuel=fuelSummary(day,route),budget=budgetForDay(day,route);
     const stopSelections=day.stopSelections||[];
     return '<section class="trip-v26-day-panel" data-v26-day="'+escapeHtml(day.id)+'"><div class="trip-v26-panel-head"><div><span class="trip-v26-kicker">SMART TRAVEL · '+escapeHtml(formatDiaryDate(day.date))+'</span><strong>Dettagli di viaggio</strong><small>'+escapeHtml(route?.name||'Itinerario')+' · '+fuel.distance+' km</small></div><strong>'+eur(budget.fuel+budget.meals+budget.lodging+budget.tolls+budget.other)+'</strong></div>'+
+      selectedStopsMarkup(day)+
       '<div class="trip-v26-day-metrics" data-v26-fuel-summary><div><strong>'+decimal(fuel.recommendedRange,0)+' km</strong><small>Autonomia prudenziale</small></div><div><strong>'+decimal(fuel.liters,1)+' L</strong><small>Carburante stimato</small></div><div><strong>'+eur(fuel.fuelCost)+'</strong><small>Costo carburante</small></div><div><strong>'+fuel.stopsRequired+'</strong><small>Rifornimenti suggeriti</small></div></div>'+
       '<div class="trip-v26-day-details"><div class="trip-v26-detail"><strong>⛽ Carburante</strong><p>'+escapeHtml(fuel.consumption+' L/100 km · serbatoio '+fuel.tankCapacity+' L · '+fuel.consumptionSource)+'</p><button type="button" data-v26-search="'+day.id+'" data-category="fuel">Cerca distributori</button></div><div class="trip-v26-detail"><strong>🍽 Pranzo e ristoro</strong><p>'+escapeHtml(day.mealPlace||'Nessun locale selezionato')+' · '+eur(budget.meals)+'</p><button type="button" data-v26-search="'+day.id+'" data-category="food">Cerca ristoranti</button></div><div class="trip-v26-detail"><strong>🛏 Pernottamento</strong><p>'+escapeHtml(day.overnight||'Da organizzare')+' · '+eur(budget.lodging)+'</p><button type="button" data-v26-search="'+day.id+'" data-category="lodging">Cerca alloggi</button></div></div>'+
       '<div class="form-grid trip-v26-cost-fields"><div class="form-field"><label>Consumo moto · L/100 km</label><input type="number" min=".1" max="30" step=".1" data-v26-fuel-field="consumption" data-day-id="'+escapeHtml(day.id)+'" value="'+fuel.consumption+'"></div><div class="form-field"><label>Serbatoio · litri</label><input type="number" min="1" max="50" step=".5" data-v26-fuel-field="tankCapacity" data-day-id="'+escapeHtml(day.id)+'" value="'+fuel.tankCapacity+'"></div><div class="form-field"><label>Carburante iniziale · %</label><input type="number" min="0" max="100" step="5" data-v26-fuel-field="startFuelPercent" data-day-id="'+escapeHtml(day.id)+'" value="'+fuel.startFuelPercent+'"></div><div class="form-field"><label>Prezzo carburante · €/L</label><input type="number" min=".5" max="5" step=".01" data-v26-fuel-field="fuelPricePerLiter" data-day-id="'+escapeHtml(day.id)+'" value="'+fuel.fuelPricePerLiter+'"></div><div class="form-field"><label>Pranzo / pasti · €</label><input type="number" min="0" step="1" data-v26-budget-field="meals" data-day-id="'+escapeHtml(day.id)+'" value="'+budget.meals+'"></div><div class="form-field"><label>Pernottamento · €</label><input type="number" min="0" step="1" data-v26-budget-field="lodging" data-day-id="'+escapeHtml(day.id)+'" value="'+budget.lodging+'"></div><div class="form-field"><label>Pedaggi · €</label><input type="number" min="0" step="1" data-v26-budget-field="tolls" data-day-id="'+escapeHtml(day.id)+'" value="'+budget.tolls+'"></div><div class="form-field"><label>Altre spese · €</label><input type="number" min="0" step="1" data-v26-budget-field="other" data-day-id="'+escapeHtml(day.id)+'" value="'+budget.other+'"></div></div>'+
-      '<div class="trip-v26-results" data-v26-results="'+escapeHtml(day.id)+'">'+['fuel','food','lodging'].map(cat=>(day.stops?.[cat]||[]).length?'<div class="trip-v26-empty">'+(cat==='fuel'?'Distributori':cat==='food'?'Ristoranti':'Alloggi')+' disponibili: '+day.stops[cat].length+' · premi il pulsante di ricerca per aggiornare.</div>':'').join('')+'</div>'+
+      '<div class="trip-v26-results" data-v26-results="'+escapeHtml(day.id)+'">'+['fuel','food','lodging'].map(cat=>stopResultsMarkup(day,cat)).join('')+'</div>'+
       '<small class="trip-v26-disclaimer">Stime indicative. Il numero di rifornimenti è prudenziale e non sostituisce la valutazione del pilota: verifica distanza reale, traffico, disponibilità e orari di apertura.</small></section>';
   }
   function enrichTripMarkup(trip){
     const total=totalBudget(trip),distance=tripDistance(trip);
-    const summary='<section class="trip-v26-section"><div class="trip-v26-section-head"><div><span class="trip-v26-kicker">RIDE V26 · SMART TRAVEL</span><strong>Il tuo viaggio, sotto controllo.</strong><small>Autonomia, soste e budget calcolati sulle giornate che hai pianificato.</small></div><strong>'+eur(total)+'</strong></div><div class="trip-v26-estimate"><div><strong>'+Math.round(distance)+' km</strong><small>Distanza pianificata</small></div><div><strong>'+trip.days.length+'</strong><small>Giornate</small></div><div><strong>'+eur(total)+'</strong><small>Budget stimato</small></div><div><strong>'+Math.round(total/Math.max(1,distance)*100)+' €/100 km</strong><small>Costo medio</small></div></div><small class="trip-v26-hint">Completa i costi di ogni giornata per rendere il budget più preciso. I valori non inseriti restano a zero, tranne il carburante che usa una stima iniziale.</small></section>';
+    const summary='<section class="trip-v26-section"><div class="trip-v26-section-head"><div><span class="trip-v26-kicker">RIDE V27 · SMART TRAVEL</span><strong>Il tuo viaggio, sotto controllo.</strong><small>Autonomia, soste e budget calcolati sulle giornate che hai pianificato.</small></div><strong data-v26-trip-total="'+escapeHtml(trip.id)+'">'+eur(total)+'</strong></div><div class="trip-v26-estimate"><div><strong>'+Math.round(distance)+' km</strong><small>Distanza pianificata</small></div><div><strong>'+trip.days.length+'</strong><small>Giornate</small></div><div><strong>'+eur(total)+'</strong><small>Budget stimato</small></div><div><strong>'+Math.round(total/Math.max(1,distance)*100)+' €/100 km</strong><small>Costo medio</small></div></div><small class="trip-v26-hint">Completa i costi di ogni giornata per rendere il budget più preciso. I valori non inseriti restano a zero, tranne il carburante che usa una stima iniziale.</small></section>';
     const days=(trip.days||[]).map(day=>renderDayPlanner(trip,day)).join('');
-    return summary+days;
+    return '<div class="trip-v26-content" data-v26-trip-content="'+escapeHtml(trip.id)+'">'+summary+days+'</div>';
   }
   function enrichTripDetail(){
     const modal=document.querySelector('#modal-root .modal');
@@ -240,7 +311,7 @@
       const total=totalBudget(trip);
       card.dataset.v26TripCard=trip.id;
       const route=tripDistance(trip);
-      card.querySelector('.trip-plan-metrics')?.insertAdjacentHTML('afterend','<div class="trip-v26-card-breakdown"><span><b>'+eur(total)+'</b> budget</span><span><b>'+Math.round(route)+' km</b> pianificati</span><span><b>'+trip.days.length+'</b> giornate</span></div>');
+      card.querySelector('.trip-plan-metrics')?.insertAdjacentHTML('afterend','<div class="trip-v26-card-breakdown"><span><b data-v26-card-total>'+eur(total)+'</b> budget</span><span><b>'+Math.round(route)+' km</b> pianificati</span><span><b>'+trip.days.length+'</b> giornate</span></div>');
       card.dataset.v26Enhanced='1';
     });
   }
@@ -260,6 +331,8 @@
       if(search){const dayId=search.dataset.v26Search,category=search.dataset.category;searchStops(dayId,category,search);return}
       const add=event.target.closest('[data-v26-add-stop]');
       if(add){addStop(add.dataset.v26AddStop,add.dataset.category,add.dataset.poiId);return}
+      const remove=event.target.closest('[data-v26-remove-stop]');
+      if(remove){removeStop(remove.dataset.v26RemoveStop,remove.dataset.poiId);return}
     });
     document.addEventListener('change',event=>{
       const input=event.target.closest('[data-v26-fuel-field]');
@@ -268,7 +341,7 @@
       if(budgetInput){
         const trip=(state.tripPlans||[]).find(t=>(t.days||[]).some(d=>String(d.id)===String(budgetInput.dataset.dayId)));
         const day=trip?.days.find(d=>String(d.id)===String(budgetInput.dataset.dayId));
-        if(day&&trip){day.budgetBreakdown=day.budgetBreakdown||{};day.budgetBreakdown[budgetInput.dataset.v26BudgetField]=Math.max(0,n(budgetInput.value));save();refreshTripBudget(trip.id)}
+        if(day&&trip){day.budgetBreakdown=day.budgetBreakdown||{};day.budgetBreakdown[budgetInput.dataset.v26BudgetField]=Math.max(0,n(budgetInput.value));save();refreshTripDetail(trip);refreshTripBudget(trip.id)}
       }
 
     });

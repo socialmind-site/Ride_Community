@@ -127,3 +127,12 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - I valori di consumo e serbatoio iniziali sono stime modificabili; il consumo del registro carburante viene preferito quando esiste un dato valido. Nessun dato viene inviato a un backend.
 - La ricerca POI dipende dai server pubblici Overpass e dalla completezza di OpenStreetMap. Disponibilità, orari, prezzi, aperture e prenotazioni devono essere verificati direttamente con le attività.
 - L'autonomia è una stima, non una garanzia: pianificare margine aggiuntivo e rifornire prima della riserva, considerando traffico, stile di guida, carico, meteo e dislivello.
+
+## RIDE V27 — Salvataggio e visualizzazione soste del viaggio
+
+- Corretto il flusso di aggiunta delle soste: dopo il salvataggio la scheda del viaggio si aggiorna immediatamente senza chiudere il dettaglio.
+- Le soste selezionate (distributori, ristoranti e alloggi) vengono mostrate in una sezione dedicata della giornata, con collegamento alla mappa e comando per rimuoverle.
+- Le selezioni e i risultati della ricerca restano associati alla singola giornata e vengono riproposti quando il viaggio viene riaperto.
+- I risultati già aggiunti mostrano lo stato “Aggiunta” per evitare inserimenti duplicati; il conteggio dei distributori salvati viene riallineato alle selezioni effettive.
+- Il dettaglio del budget e i riepiloghi vengono aggiornati dopo modifiche a carburante e spese.
+- Aggiornata la cache PWA alla release V27 per distribuire il modulo corretto anche sui dispositivi che avevano memorizzato V26.
