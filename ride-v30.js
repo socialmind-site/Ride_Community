@@ -163,7 +163,8 @@
     const items=day.stops?.[category]||[];
     return items.map(item=>{
       const added=(day.stopSelections||[]).some(s=>String(s.id)===String(item.id));
-      return '<article class="trip-v26-result"><span class="trip-v26-result-icon">'+categoryIcon(category)+'</span><span class="trip-v26-result-copy"><strong>'+esc(item.name)+'</strong><small>'+esc(categoryLabel(category))+(item.tags?.cuisine?' · '+esc(item.tags.cuisine):'')+' · OpenStreetMap</small></span><span class="trip-v26-result-actions"><button type="button" class="trip-v30-place-button" data-v30-place-card="1" data-v30-day-id="'+esc(day.id)+'" data-v30-category="'+category+'" data-v30-poi-id="'+esc(item.id)+'">Vedi scheda</button><a target="_blank" rel="noopener" href="'+googleMapsUrl(item)+'">Mappa ↗</a><button type="button" '+(added?'disabled':'')+' data-v26-add-stop="'+esc(day.id)+'" data-category="'+category+'" data-poi-id="'+esc(item.id)+'">'+(added?'✓ Aggiunta':'Aggiungi')+'</button></span></article>';
+      const score=item.tags?.rating?' · ★ '+esc(item.tags.rating):item.tags?.stars?' · '+esc(item.tags.stars)+' stelle':'';
+      return '<article class="trip-v26-result"><span class="trip-v26-result-icon">'+categoryIcon(category)+'</span><span class="trip-v26-result-copy"><strong>'+esc(item.name)+'</strong><small>'+esc(categoryLabel(category))+(item.tags?.cuisine?' · '+esc(item.tags.cuisine):'')+score+' · OpenStreetMap</small></span><span class="trip-v26-result-actions"><button type="button" class="trip-v30-place-button" data-v30-place-card="1" data-v30-day-id="'+esc(day.id)+'" data-v30-category="'+category+'" data-v30-poi-id="'+esc(item.id)+'">Vedi scheda</button><a target="_blank" rel="noopener" href="'+googleMapsUrl(item)+'">Mappa ↗</a><button type="button" '+(added?'disabled':'')+' data-v26-add-stop="'+esc(day.id)+'" data-category="'+category+'" data-poi-id="'+esc(item.id)+'">'+(added?'✓ Aggiunta':'Aggiungi')+'</button></span></article>';
     }).join('');
   }
   function renderResults(dayId,category){
@@ -328,7 +329,7 @@
       item.stops.forEach((stop,index)=>{
         const color=categoryColor(stop.category),label=String(index+1);
         const icon=window.L.divIcon({className:'trip-v30-marker',html:'<span style="background:'+color+'">'+label+'</span>',iconSize:[29,29],iconAnchor:[14,14]});
-        const popup='<strong>'+esc(stop.name)+'</strong><br><small>'+esc(categoryLabel(stop.category))+' · G'+(item.dayIndex+1)+' · '+Math.round(stop.alongKm)+' km dalla partenza</small><br><a target="_blank" rel="noopener" href="'+googleMapsUrl(stop)+'">Indicazioni ↗</a>';
+        const popup='<strong>'+esc(stop.name)+'</strong><br><small>'+esc(categoryLabel(stop.category))+' · G'+(item.dayIndex+1)+' · '+Math.round(stop.alongKm)+' km dalla partenza</small><br><button type="button" class="trip-v30-place-button" data-v30-place-card="1" data-v30-day-id="'+esc(item.day.id)+'" data-v30-category="'+esc(stop.category)+'" data-v30-poi-id="'+esc(stop.id)+'">Vedi scheda</button> <a target="_blank" rel="noopener" href="'+googleMapsUrl(stop)+'">Indicazioni ↗</a>';
         window.L.marker([stop.lat,stop.lon],{icon}).bindPopup(popup).addTo(activeMap.layers);
         bounds.push([stop.lat,stop.lon]);
       });
