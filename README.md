@@ -116,3 +116,14 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - Alla ripresa viene richiesto un nuovo fix GPS e non viene conteggiato il salto di posizione durante la pausa.
 - Su browser compatibili RIDE richiede il Screen Wake Lock mentre il GPS è attivo, per ridurre lo spegnimento automatico dello schermo. Il lock viene rilasciato in pausa o a fine sessione e può essere riacquisito quando la pagina torna visibile.
 - La sessione e le tracce restano locali; il GPS non viene registrato in background quando la pagina è chiusa. La compatibilità del Wake Lock dipende da browser, dispositivo e modalità di installazione.
+
+
+## RIDE V26 — Smart Travel Planner
+
+- Estimatore per giornata di autonomia e carburante basato su distanza dell'itinerario, consumo medio registrato nel garage (se disponibile), capacità serbatoio, livello iniziale, riserva e prezzo al litro.
+- Suggerimento prudenziale del numero di rifornimenti: applica un margine di sicurezza alla percorrenza stimata e non presume che il serbatoio venga utilizzato fino alla riserva.
+- Ricerca di distributori, ristoranti/caffè e strutture ricettive lungo la geometria del percorso tramite OpenStreetMap / Overpass; risultati apribili su Google Maps e salvabili nella giornata.
+- Budget giornaliero modificabile per carburante, pasti, pernottamento, pedaggi e altre spese; riepilogo aggregato per l'intero viaggio.
+- I valori di consumo e serbatoio iniziali sono stime modificabili; il consumo del registro carburante viene preferito quando esiste un dato valido. Nessun dato viene inviato a un backend.
+- La ricerca POI dipende dai server pubblici Overpass e dalla completezza di OpenStreetMap. Disponibilità, orari, prezzi, aperture e prenotazioni devono essere verificati direttamente con le attività.
+- L'autonomia è una stima, non una garanzia: pianificare margine aggiuntivo e rifornire prima della riserva, considerando traffico, stile di guida, carico, meteo e dislivello.
