@@ -1,5 +1,5 @@
-const CACHE='ride-v36-1-safety-init-fix-20261124';
-const RELEASE='v36.1';
+const CACHE='ride-v36-2-safety-panel-selector-fix-20261124';
+const RELEASE='v36.2';
 const FILES=[
   './',
   './index.html',

@@ -242,3 +242,4 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - Le segnalazioni scadono dalla visualizzazione dopo 24 ore e non sono avvisi ufficiali.
 - La chiave publishable è client-safe; nessuna service-role key è inclusa nell'app.
 - RIDE V36.1: inizializzazione del client community indipendente dalla schermata iniziale, osservazione della creazione lazy della Mappa Community e attesa dell'inizializzazione prima di pubblicare o votare. Cache PWA incrementata per distribuire il fix.
+- RIDE V36.2: aggiunto l'ID richiesto dal selettore del pannello sicurezza, così l'inizializzazione lazy trova la sezione quando viene aperta la Mappa Community. Cache PWA incrementata.
