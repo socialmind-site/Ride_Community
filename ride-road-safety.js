@@ -14,7 +14,7 @@ const CATEGORIES=[
  ['traffic','Traffico / rallentamenti','🚦'],
  ['other','Altro','📍']
 ];
-let client=null,sessionUser=null,rows=[],channel=null,loading=false,lastLocation=null,initPromise=null,panelObserver=null;
+let client=null,sessionUser=null,rows=[],channel=null,loading=false,lastLocation=null,initPromise=null;
 const $=(s,r=document)=>r.querySelector(s);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const label=key=>CATEGORIES.find(c=>c[0]===key)?.[1]||'Segnalazione';
@@ -125,18 +125,7 @@ async function init(){
   // The Community map is rendered later by the single-page app.
   await load();
   channel=client.channel('ride-road-reports-live').on('postgres_changes',{event:'*',schema:'public',table:'road_reports'},()=>load()).subscribe();
-  const panel=getPanel();
-  if(panel){panel.dataset.rsInitialized='1';await load()}
-  if(!panelObserver&&typeof MutationObserver!=='undefined'&&document.body){
-   panelObserver=new MutationObserver(()=>{
-    const currentPanel=getPanel();
-    if(currentPanel&&!currentPanel.dataset.rsInitialized){
-     currentPanel.dataset.rsInitialized='1';
-     load();
-    }
-   });
-   panelObserver.observe(document.body,{childList:true,subtree:true});
-  }
+  if(getPanel())render();
  })().catch(error=>{
   initPromise=null;
   status('Servizio segnalazioni non disponibile: '+(error?.message||'controlla la connessione e riprova.'));
@@ -157,6 +146,6 @@ document.addEventListener('submit',async e=>{
  try{await submitReport(e.target)}catch(err){toast(err.message||'Segnalazione non pubblicata.')}finally{button.disabled=false;button.textContent='Pubblica segnalazione'}
 });
 window.addEventListener('ride-road-reports-updated',event=>{const map=window.rideMap;if(map&&typeof map.setRoadSafetyReports==='function')map.setRoadSafetyReports(event.detail?.reports||[])});
-window.RIDE_ROAD_SAFETY={load,vote,createReport,getReports:activeReports,openMapReport,categories:CATEGORIES.map(c=>({key:c[0],label:c[1],icon:c[2],color:CATEGORY_COLORS[c[0]]||'#94a3b8'}))};
+window.RIDE_ROAD_SAFETY={load,vote,createReport,renderPanel:render,getReports:activeReports,openMapReport,categories:CATEGORIES.map(c=>({key:c[0],label:c[1],icon:c[2],color:CATEGORY_COLORS[c[0]]||'#94a3b8'}))};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
