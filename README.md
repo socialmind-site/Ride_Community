@@ -232,3 +232,12 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - I link sono autonomi: chiunque li riceva può visualizzare i dati inclusi. Il contenuto è nel frammento URL e non viene caricato su un server RIDE.
 - Aggiornata la cache PWA alla V35.
 - RIDE V35.1: rafforzata la validazione delle date e delle coordinate GPS nei Roadbook condivisi, con sanitizzazione delle tappe importate prima di registrare percorsi personali.
+ 
+## RIDE V36 — Road Safety Community
+- Progetto Supabase RIDE Community creato su piano Free in eu-central-1.
+- Database condiviso road_reports e road_report_votes, RLS, indici, Realtime, limite server-side 3 segnalazioni per utente/ora.
+- Categorie: pericolo, incidente, lavori, chiusura, ghiaia, asfalto danneggiato, meteo, traffico e altro.
+- Sezione segnalazioni nella Mappa Community: GPS, elenco live, conferme, risoluzione e link posizione.
+- Accesso anonimo richiesto per pubblicare e votare; va abilitato nel dashboard Supabase prima del test.
+- Le segnalazioni scadono dalla visualizzazione dopo 24 ore e non sono avvisi ufficiali.
+- La chiave publishable è client-safe; nessuna service-role key è inclusa nell'app.

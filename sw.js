@@ -1,8 +1,9 @@
-const CACHE='ride-v35-1-shareable-roadbook-validated-20261124';
-const RELEASE='v35.1';
+const CACHE='ride-v36-road-safety-community-20261124';
+const RELEASE='v36';
 const FILES=[
   './',
   './index.html',
+  './ride-road-safety.js',
   './routes-catalog.js',
   './europe-routes.js',
   './ride-v26.js',
