@@ -1,5 +1,5 @@
-const CACHE='ride-v37-2-community-map-stability-20261124';
-const RELEASE='v37.2';
+const CACHE='ride-v37-3-map-engine-restore-20261124';
+const RELEASE='v37.3';
 const FILES=[
   './',
   './index.html',
