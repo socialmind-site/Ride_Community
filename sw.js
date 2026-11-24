@@ -1,5 +1,5 @@
-const CACHE='ride-v37-3-map-engine-restore-20261124';
-const RELEASE='v37.3';
+const CACHE='ride-v37-4-native-road-report-markers-20261124';
+const RELEASE='v37.4';
 const FILES=[
   './',
   './index.html',
