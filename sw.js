@@ -1,5 +1,5 @@
-const CACHE='ride-v24-weather-reroute-checklist-20261124';
-const RELEASE='v24';
+const CACHE='ride-v25-gps-pause-resume-20261124';
+const RELEASE='v25';
 const FILES=[
   './',
   './index.html',
