@@ -136,3 +136,13 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - I risultati già aggiunti mostrano lo stato “Aggiunta” per evitare inserimenti duplicati; il conteggio dei distributori salvati viene riallineato alle selezioni effettive.
 - Il dettaglio del budget e i riepiloghi vengono aggiornati dopo modifiche a carburante e spese.
 - Aggiornata la cache PWA alla release V27 per distribuire il modulo corretto anche sui dispositivi che avevano memorizzato V26.
+
+## RIDE V28 — Mappa interattiva del viaggio
+
+- Nel dettaglio di ogni viaggio è disponibile una mappa MapLibre dedicata con i tracciati delle singole giornate.
+- Filtro “Tutto il viaggio” o selezione di una singola giornata; ogni giornata usa un colore distinto.
+- Le soste salvate (carburante, ristoro e pernottamento) vengono proiettate sul tracciato e ordinate in base alla distanza progressiva dalla partenza.
+- I marker mostrano categoria e sequenza (giornata.numero); selezionandoli si apre una scheda con nome, categoria, distanza indicativa e collegamento a Google Maps.
+- L'elenco sottostante riporta lo stesso ordine delle soste. La mappa si aggiorna dopo aggiunte e rimozioni senza perdere il filtro attivo.
+- Se il routing stradale non è disponibile, la mappa usa i punti noti del catalogo come geometria approssimativa e lo segnala. La proiezione e l'ordine sono indicativi in questo caso.
+- La cartografia richiede connessione Internet; i dati del viaggio restano locali.

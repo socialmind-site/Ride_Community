@@ -1,11 +1,12 @@
-const CACHE='ride-v27-trip-stop-save-20261124';
-const RELEASE='v27';
+const CACHE='ride-v28-interactive-trip-map-20261124';
+const RELEASE='v28';
 const FILES=[
   './',
   './index.html',
   './routes-catalog.js',
   './europe-routes.js',
   './ride-v26.js',
+  './ride-v28.js',
   './manifest.webmanifest',
   './icon.svg',
   './assets/garda-road.webp',
