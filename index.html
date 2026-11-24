@@ -1054,6 +1054,11 @@ html,body{background:var(--bg);color:var(--text)}
  .planner-via-actions{gap:3px}.planner-via-actions button{width:25px;height:27px}
 }
 
+
+/* V21 planner layout refinement */
+.motorcycle-planner-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:820px){.motorcycle-planner-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.motorcycle-planner-fields{grid-template-columns:1fr}}
 </style>
   <link rel="icon" type="image/svg+xml" href="./icon.svg">
   <link rel="manifest" href="./manifest.webmanifest">
