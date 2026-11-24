@@ -96,3 +96,13 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - Le geometrie stradali mancanti vengono richieste al motore di routing prima di comporre il file; se non sono disponibili, la giornata viene saltata e il numero di tracce esportate viene indicato all'utente.
 - Il viaggio può essere esportato anche come file calendario `.ics`, con un evento per giornata, orario di partenza, itinerario, località, pernottamento e note.
 - I file vengono generati localmente nel browser. Non è richiesto un backend.
+
+
+## RIDE V24 — Preparazione viaggio, meteo e ricalcolo GPS
+
+- Checklist bagagli e preparazione per ogni viaggio multi-giorno, con stato salvato per singolo viaggio e incluso nel backup JSON.
+- Avvisi meteo indicativi lungo partenza, punto intermedio e arrivo: temporali, pioggia probabile, raffiche, vento sostenuto, visibilità ridotta, neve e temperature prossime allo zero con precipitazioni.
+- Gli avvisi sono basati sui dati orari disponibili da Open-Meteo e non sostituiscono bollettini ufficiali o la valutazione delle condizioni stradali.
+- Modalità guida: quando il GPS rileva per più aggiornamenti una posizione distante dal tracciato, compare un comando manuale per ricalcolare da posizione attuale verso le tappe non ancora raggiunte e la destinazione.
+- Il ricalcolo non parte automaticamente: il motociclista deve fermarsi in sicurezza e richiederlo esplicitamente. Il nuovo tracciato viene salvato nella libreria personale.
+- Nessun backend o servizio di posizione in background; GPS attivo solo mentre la modalità guida resta aperta.
