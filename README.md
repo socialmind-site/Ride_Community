@@ -231,3 +231,4 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - Per privacy non vengono condivisi profilo, email, contatti di emergenza, manutenzione, rifornimenti, budget, checklist personali o note private.
 - I link sono autonomi: chiunque li riceva può visualizzare i dati inclusi. Il contenuto è nel frammento URL e non viene caricato su un server RIDE.
 - Aggiornata la cache PWA alla V35.
+- RIDE V35.1: rafforzata la validazione delle date e delle coordinate GPS nei Roadbook condivisi, con sanitizzazione delle tappe importate prima di registrare percorsi personali.

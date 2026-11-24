@@ -1,5 +1,5 @@
-const CACHE='ride-v35-shareable-roadbook-20261124';
-const RELEASE='v35';
+const CACHE='ride-v35-1-shareable-roadbook-validated-20261124';
+const RELEASE='v35.1';
 const FILES=[
   './',
   './index.html',

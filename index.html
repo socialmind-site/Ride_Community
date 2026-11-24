@@ -2300,8 +2300,9 @@ function buildRoadbookPayload(trip){
 function validateRoadbookPayload(payload){
  if(!payload||payload.app!=='RIDE_ROADBOOK'||payload.version!==1||!payload.trip||!Array.isArray(payload.days)||!Array.isArray(payload.routes))throw new Error('Questo collegamento non contiene un Roadbook RIDE valido.');
  if(payload.days.length>31||payload.routes.length>31)throw new Error('Il Roadbook contiene troppe giornate o itinerari.');
+ if(typeof payload.shareId!=='string'||!payload.shareId||payload.shareId.length>100)throw new Error('Il Roadbook non contiene un identificativo valido.');
  payload.days.forEach(day=>{
-  if(!day||!/^\d{4}-\d{2}-\d{2}$/.test(String(day.date||'')))throw new Error('Una delle giornate del Roadbook non ha una data valida.');
+  if(!day||!/^\d{4}-\d{2}-\d{2}$/.test(String(day.date||''))||Number.isNaN(new Date(String(day.date)+'T12:00:00').getTime()))throw new Error('Una delle giornate del Roadbook non ha una data valida.');
   if(!Array.isArray(day.stopSelections)||day.stopSelections.length>100)throw new Error('Il Roadbook contiene troppe soste in una giornata.');
   day.stopSelections.forEach(stop=>{
    if(!Number.isFinite(Number(stop.lat))||!Number.isFinite(Number(stop.lon))||Math.abs(Number(stop.lat))>90||Math.abs(Number(stop.lon))>180)throw new Error('Una sosta del Roadbook contiene coordinate non valide.');
@@ -2309,7 +2310,15 @@ function validateRoadbookPayload(payload){
  });
  payload.routes.forEach(route=>{
   if(!route||!route.id||!Array.isArray(route.stops)||route.stops.length>100)throw new Error('Un itinerario del Roadbook non è valido.');
-  if(route.geometry!=null&&(!Array.isArray(route.geometry)||route.geometry.length>1100))throw new Error('La traccia GPS condivisa supera il limite consentito.');
+  route.stops.forEach(point=>{
+   if(!Array.isArray(point)||point.length<3||!Number.isFinite(Number(point[1]))||!Number.isFinite(Number(point[2]))||Math.abs(Number(point[1]))>90||Math.abs(Number(point[2]))>180)throw new Error('Un itinerario contiene coordinate non valide.');
+  });
+  if(route.geometry!=null){
+   if(!Array.isArray(route.geometry)||route.geometry.length>1100)throw new Error('La traccia GPS condivisa supera il limite consentito.');
+   route.geometry.forEach(point=>{
+    if(!Array.isArray(point)||point.length<2||!Number.isFinite(Number(point[0]))||!Number.isFinite(Number(point[1]))||Math.abs(Number(point[0]))>90||Math.abs(Number(point[1]))>180)throw new Error('La traccia GPS condivisa contiene coordinate non valide.');
+   });
+  }
  });
 }
 function roadbookDistance(payload){
@@ -2428,7 +2437,7 @@ function importSharedRoadbook(){
     latlngs:geometry.map(point=>[Number(point[0]),Number(point[1])]),
     distance:Number(route.distance)||0,
     durationMinutes:Math.max(1,(Number(minutes?.[1]||0)*60)+Number(minutes?.[2]||0)||Math.round((Number(route.distance)||0)/45*60)),
-    stops:(route.stops||[]).map(point=>[roadbookSafeText(point[0],100),Number(point[1]),Number(point[2]),Number(point[3])||0]),
+    stops:(route.stops||[]).filter(point=>Array.isArray(point)&&Number.isFinite(Number(point[1]))&&Number.isFinite(Number(point[2]))&&Math.abs(Number(point[1]))<=90&&Math.abs(Number(point[2]))<=180).map(point=>[roadbookSafeText(point[0],100),Number(point[1]),Number(point[2]),Number(point[3])||0]),
     sourceType:route.sourceType==='motorcycle'?'motorcycle':'gpx'
    };
    state.customRoutes=[...(state.customRoutes||[]),gpx];
@@ -3096,7 +3105,7 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
   });
   window.addEventListener('load',async()=>{
     try{
-      const registration=await navigator.serviceWorker.register('./sw.js?release=v35',{updateViaCache:'none'});
+      const registration=await navigator.serviceWorker.register('./sw.js?release=v35.1',{updateViaCache:'none'});
       await registration.update();
       if(registration.waiting)registration.waiting.postMessage({type:'SKIP_WAITING'});
     }catch(error){
