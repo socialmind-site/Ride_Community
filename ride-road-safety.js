@@ -15,6 +15,10 @@ const CATEGORIES=[
  ['other','Altro','📍']
 ];
 let client=null,sessionUser=null,rows=[],channel=null,loading=false,lastLocation=null,initPromise=null,selectedCategory='all';
+const PROXIMITY_ALERT_KEY='ride-road-proximity-alerts-v1';
+let proximityAlertsEnabled=false,proximityWatchId=null,rideGpsMode='off',proximityBannerTimer=null;
+const proximityAlertCooldowns=new Map();
+try{proximityAlertsEnabled=localStorage.getItem(PROXIMITY_ALERT_KEY)==='1'}catch(error){}
 const $=(s,r=document)=>r.querySelector(s);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const label=key=>CATEGORIES.find(c=>c[0]===key)?.[1]||'Segnalazione';
@@ -43,6 +47,142 @@ function reportConfidence(report){
  if(yes>=2&&age<=6)return{key:'medium',label:'Confermata',detail:yes+' conferme',level:2};
  if(yes>=1)return{key:'low',label:'Conferma community',detail:yes+' conferma'+(yes===1?'':'e'),level:1};
  return{key:'new',label:'Nuova',detail:'In attesa di conferme',level:0};
+}
+function proximityAlertPageVisible(){
+ return !!document.querySelector('.community-map-page,.ride-mode-page');
+}
+function updateProximityAlertControls(){
+ const buttons=document.querySelectorAll('[data-rs-alert-toggle]');
+ buttons.forEach(button=>{
+  button.classList.toggle('active',proximityAlertsEnabled);
+  button.setAttribute('aria-pressed',proximityAlertsEnabled?'true':'false');
+  button.innerHTML='<span class="road-alert-toggle-indicator"></span><span>'+(proximityAlertsEnabled?'Avvisi attivi':'Attiva avvisi')+'</span>';
+ });
+ const status=$('#road-alert-status');
+ if(status){
+  if(!proximityAlertsEnabled)status.textContent='Disattivati. Attivali per ricevere avvisi mentre RIDE è aperta.';
+  else if(rideGpsMode==='paused')status.textContent='Avvisi in pausa insieme al GPS della Modalità guida.';
+  else if(rideGpsMode==='active')status.textContent='Attivi: usano il GPS della Modalità guida.';
+  else if(proximityWatchId!==null)status.textContent='GPS attivo · avvisi di prossimità fino a 1,5 km.';
+  else status.textContent='Attivi quando apri Mappa o Modalità guida e consenti la posizione.';
+ }
+}
+function stopProximityWatch(){
+ if(proximityWatchId!==null&&navigator.geolocation){
+  try{navigator.geolocation.clearWatch(proximityWatchId)}catch(error){}
+ }
+ proximityWatchId=null;
+}
+function setProximityAlertsEnabled(enabled,quiet=false){
+ proximityAlertsEnabled=!!enabled;
+ try{localStorage.setItem(PROXIMITY_ALERT_KEY,proximityAlertsEnabled?'1':'0')}catch(error){}
+ if(!proximityAlertsEnabled){stopProximityWatch();hideProximityBanner();if(!quiet)toast('Avvisi di prossimità disattivati.')}
+ else{
+  if(!quiet)toast('Avvisi di prossimità attivati. Consenti la posizione per usarli.');
+  refreshProximityWatch();
+ }
+ updateProximityAlertControls();
+}
+function refreshProximityWatch(){
+ updateProximityAlertControls();
+ if(!proximityAlertsEnabled||document.visibilityState!=='visible'||!proximityAlertPageVisible()||rideGpsMode!=='off'){
+  stopProximityWatch();updateProximityAlertControls();return;
+ }
+ if(!navigator.geolocation){const status=$('#road-alert-status');if(status)status.textContent='Questo dispositivo non supporta la geolocalizzazione.';return}
+ if(proximityWatchId!==null)return;
+ try{
+  proximityWatchId=navigator.geolocation.watchPosition(
+   position=>checkProximity(position.coords),
+   error=>{
+    const failedId=proximityWatchId;proximityWatchId=null;
+    if(failedId!==null){try{navigator.geolocation.clearWatch(failedId)}catch(e){}}
+    if(error?.code===1){
+     setProximityAlertsEnabled(false,true);
+     const status=$('#road-alert-status');if(status)status.textContent='Permesso posizione negato. Puoi abilitarlo dalle impostazioni del browser.';
+     toast('Per gli avvisi RIDE serve il permesso di posizione.');
+    }else{
+     const status=$('#road-alert-status');if(status)status.textContent='Segnale GPS temporaneamente non disponibile. RIDE riproverà.';
+     setTimeout(refreshProximityWatch,12000);
+    }
+    updateProximityAlertControls();
+   },
+   {enableHighAccuracy:true,maximumAge:5000,timeout:20000}
+  );
+ }catch(error){
+  proximityWatchId=null;
+  const status=$('#road-alert-status');if(status)status.textContent='Non riesco ad avviare il GPS. Controlla i permessi del browser.';
+  updateProximityAlertControls();
+ }
+ updateProximityAlertControls();
+}
+function setRideGpsMode(mode){
+ rideGpsMode=['active','paused'].includes(mode)?mode:'off';
+ if(rideGpsMode!=='off')stopProximityWatch();
+ else setTimeout(refreshProximityWatch,250);
+ updateProximityAlertControls();
+}
+function distanceBetweenMeters(lat1,lon1,lat2,lon2){
+ const rad=value=>value*Math.PI/180,R=6371000;
+ const dLat=rad(lat2-lat1),dLon=rad(lon2-lon1);
+ const a=Math.sin(dLat/2)**2+Math.cos(rad(lat1))*Math.cos(rad(lat2))*Math.sin(dLon/2)**2;
+ return 2*R*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function proximityAlertRadius(report){
+ const category=String(report.category||'');
+ if(['hazard','accident','closed'].includes(category))return 1500;
+ if(['gravel','damaged_road'].includes(category))return 1200;
+ if(category==='roadworks')return 900;
+ if(category==='traffic')return 650;
+ if(category==='weather'){
+  const text=[report.title,report.description].filter(Boolean).join(' ').toLocaleLowerCase('it');
+  return /temporale|fulmine|piogg|allag|neve|ghiacc|gelat|vento|raffich|storm|flood|snow|ice|wind|rain/.test(text)?1200:0;
+ }
+ return 0;
+}
+function formatAlertDistance(distance){
+ return distance<1000?Math.max(50,Math.round(distance/50)*50)+' m':(distance/1000).toFixed(1).replace('.',',')+' km';
+}
+function ensureProximityBanner(){
+ let banner=$('#ride-proximity-banner');if(banner)return banner;
+ if(!document.body)return null;
+ banner=document.createElement('section');banner.id='ride-proximity-banner';banner.className='ride-proximity-banner';banner.hidden=true;
+ banner.setAttribute('role','status');banner.setAttribute('aria-live','assertive');
+ document.body.appendChild(banner);return banner;
+}
+function hideProximityBanner(){
+ const banner=$('#ride-proximity-banner');if(banner)banner.hidden=true;
+ if(proximityBannerTimer){clearTimeout(proximityBannerTimer);proximityBannerTimer=null}
+}
+function showProximityBanner(report,distance){
+ const banner=ensureProximityBanner();if(!banner)return;
+ const visual=window.rideReportVisual?window.rideReportVisual(report):{svg:'',color:'#ef4444',label:label(report.category)};
+ const confidence=reportConfidence(report);
+ banner.innerHTML='<div class="ride-proximity-icon" style="--rs-alert-color:'+visual.color+'">'+visual.svg+'</div><div class="ride-proximity-copy"><span>AVVISO DI PROSSIMITÀ · '+formatAlertDistance(distance)+'</span><strong>'+esc(report.title||visual.label)+'</strong><small>'+esc(visual.label)+' · '+esc(confidence.label)+'</small></div><button type="button" class="ride-proximity-open" data-rs-alert-open="'+esc(report.id)+'">Dettagli</button><button type="button" class="ride-proximity-close" data-rs-alert-dismiss aria-label="Chiudi avviso">×</button>';
+ banner.hidden=false;
+ if(proximityBannerTimer)clearTimeout(proximityBannerTimer);
+ proximityBannerTimer=setTimeout(hideProximityBanner,18000);
+ try{if(typeof navigator.vibrate==='function')navigator.vibrate([110,70,110])}catch(error){}
+}
+function checkProximity(coords){
+ if(!proximityAlertsEnabled||document.visibilityState!=='visible'||!proximityAlertPageVisible())return;
+ const lat=Number(coords?.latitude),lon=Number(coords?.longitude),accuracy=Number(coords?.accuracy||0);
+ if(!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180||accuracy>85)return;
+ const now=Date.now(),nearby=[];
+ activeReports().forEach(report=>{
+  const confidence=reportConfidence(report);
+  if(confidence.key==='disputed')return;
+  const radius=proximityAlertRadius(report);if(!radius)return;
+  const distance=distanceBetweenMeters(lat,lon,Number(report.latitude),Number(report.longitude));
+  if(distance>radius)return;
+  const last=proximityAlertCooldowns.get(String(report.id))||0;
+  if(now-last<20*60*1000)return;
+  nearby.push({report,distance});
+ });
+ nearby.sort((a,b)=>a.distance-b.distance);
+ if(!nearby.length)return;
+ const nearest=nearby[0];
+ proximityAlertCooldowns.set(String(nearest.report.id),now);
+ showProximityBanner(nearest.report,nearest.distance);
 }
 function renderMapFilters(){
  const bar=$('#road-report-filters');if(!bar)return;
@@ -78,6 +218,8 @@ function render(){
   }).join(''):'<div class="rs-empty">'+(active.length?'Nessuna segnalazione in questa categoria. Prova un altro filtro.':'Nessuna segnalazione attiva in questo momento. Se noti un pericolo, aiutaci ad avvisare gli altri motociclisti.')+'</div>';
  }
  notifyMap();
+ updateProximityAlertControls();
+ refreshProximityWatch();
 }
 
 function openMapReport(id){
@@ -184,6 +326,9 @@ async function init(){
 }
 document.addEventListener('click',async e=>{
  const target=e.target instanceof Element?e.target:null;if(!target)return;
+ const alertToggle=target.closest('[data-rs-alert-toggle]');if(alertToggle){e.preventDefault();setProximityAlertsEnabled(!proximityAlertsEnabled);return}
+ const alertDismiss=target.closest('[data-rs-alert-dismiss]');if(alertDismiss){e.preventDefault();hideProximityBanner();return}
+ const alertOpen=target.closest('[data-rs-alert-open]');if(alertOpen){e.preventDefault();hideProximityBanner();openMapReport(alertOpen.dataset.rsAlertOpen);return}
  const filter=target.closest('[data-rs-filter]');if(filter){e.preventDefault();setCategoryFilter(filter.dataset.rsFilter||'all');return}
  const create=target.closest('[data-rs-create]');if(create){e.preventDefault();createReport();return}
  const vote=target.closest('[data-rs-vote]');if(vote){vote.disabled=true;try{await window.RIDE_ROAD_SAFETY.vote(vote.dataset.rsId,vote.dataset.rsVote)}catch(err){toast(err.message||'Conferma non riuscita.')}finally{vote.disabled=false}return}
@@ -195,6 +340,8 @@ document.addEventListener('submit',async e=>{
  try{await submitReport(e.target)}catch(err){toast(err.message||'Segnalazione non pubblicata.')}finally{button.disabled=false;button.textContent='Pubblica segnalazione'}
 });
 window.addEventListener('ride-road-reports-updated',event=>{const map=window.rideMap;if(map&&typeof map.setRoadSafetyReports==='function')map.setRoadSafetyReports(event.detail?.reports||[])});
-window.RIDE_ROAD_SAFETY={load,vote,createReport,renderPanel:render,getReports:filteredReports,getAllReports:activeReports,setCategoryFilter,getCategoryFilter:()=>selectedCategory,openMapReport,reportConfidence,categories:CATEGORIES.map(c=>({key:c[0],label:c[1],icon:c[2],color:CATEGORY_COLORS[c[0]]||'#94a3b8'}))};
+window.RIDE_ROAD_SAFETY={load,vote,createReport,renderPanel:render,getReports:filteredReports,getAllReports:activeReports,setCategoryFilter,getCategoryFilter:()=>selectedCategory,openMapReport,reportConfidence,checkProximity,setRideGpsMode,categories:CATEGORIES.map(c=>({key:c[0],label:c[1],icon:c[2],color:CATEGORY_COLORS[c[0]]||'#94a3b8'}))};
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refreshProximityWatch();else{stopProximityWatch();hideProximityBanner()}});
+window.addEventListener('pagehide',()=>{stopProximityWatch();hideProximityBanner()});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
