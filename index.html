@@ -2757,7 +2757,7 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
   });
   window.addEventListener('load',async()=>{
     try{
-      const registration=await navigator.serviceWorker.register('./sw.js?release=v25',{updateViaCache:'none'});
+      const registration=await navigator.serviceWorker.register('./sw.js?release=v26',{updateViaCache:'none'});
       await registration.update();
       if(registration.waiting)registration.waiting.postMessage({type:'SKIP_WAITING'});
     }catch(error){
@@ -2767,5 +2767,6 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
 }
 
   </script>
+  <script src="./ride-v26.js" defer></script>
 </body>
 </html>
