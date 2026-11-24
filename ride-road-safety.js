@@ -14,7 +14,7 @@ const CATEGORIES=[
  ['traffic','Traffico / rallentamenti','🚦'],
  ['other','Altro','📍']
 ];
-let client=null,sessionUser=null,rows=[],channel=null,loading=false,lastLocation=null;
+let client=null,sessionUser=null,rows=[],channel=null,loading=false,lastLocation=null,initPromise=null,panelObserver=null;
 const $=(s,r=document)=>r.querySelector(s);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const label=key=>CATEGORIES.find(c=>c[0]===key)?.[1]||'Segnalazione';
@@ -54,6 +54,7 @@ function getCoords(){
 }
 async function createReport(){
  try{
+  await init();
   await ensureSession();
   const coords=await getCoords();lastLocation=coords;
   const options=CATEGORIES.map(c=>'<option value="'+c[0]+'">'+c[2]+' '+esc(c[1])+'</option>').join('');
@@ -62,6 +63,7 @@ async function createReport(){
  }catch(e){status(e.message);if(typeof toast==='function')toast(e.message)}
 }
 async function submitReport(form){
+ await init();
  const data=new FormData(form),category=String(data.get('category')||''),title=String(data.get('title')||'').trim(),road=String(data.get('road_name')||'').trim(),description=String(data.get('description')||'').trim();
  if(!CATEGORIES.some(c=>c[0]===category)||title.length<3){toast('Controlla i campi obbligatori.');return}
  const coords=lastLocation||await getCoords();
@@ -73,6 +75,7 @@ async function submitReport(form){
  await load();
 }
 async function vote(id,vote){
+ await init();
  await ensureSession();
  const {data,error}=await client.rpc('confirm_road_report',{p_report_id:id,p_vote:vote});
  if(error)throw error;
@@ -80,6 +83,7 @@ async function vote(id,vote){
  await load();
 }
 async function resolve(id){
+ await init();
  await ensureSession();
  const {data,error}=await client.rpc('resolve_road_report',{p_report_id:id});
  if(error)throw error;
@@ -87,22 +91,42 @@ async function resolve(id){
  toast('Segnalazione chiusa.');await load();
 }
 async function init(){
- const panel=getPanel();if(!panel)return;
- try{
+ if(initPromise)return initPromise;
+ initPromise=(async()=>{
   const {createClient}=await import('https://esm.sh/@supabase/supabase-js@2.57.0');
   client=createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
-  try{await ensureSession()}catch(e){status('Community pronta: attiva l’accesso anonimo in Supabase per pubblicare e confermare segnalazioni.');}
+  // Initialize the shared client even when RIDE starts on Home.
+  // The Community map is rendered later by the single-page app.
   await load();
   channel=client.channel('ride-road-reports-live').on('postgres_changes',{event:'*',schema:'public',table:'road_reports'},()=>load()).subscribe();
- }catch(e){status('Servizio segnalazioni non disponibile. Controlla la connessione e riprova.');console.error('RIDE safety init',e)}
+  const panel=getPanel();
+  if(panel){panel.dataset.rsInitialized='1';await load()}
+  if(!panelObserver&&typeof MutationObserver!=='undefined'&&document.body){
+   panelObserver=new MutationObserver(()=>{
+    const currentPanel=getPanel();
+    if(currentPanel&&!currentPanel.dataset.rsInitialized){
+     currentPanel.dataset.rsInitialized='1';
+     load();
+    }
+   });
+   panelObserver.observe(document.body,{childList:true,subtree:true});
+  }
+ })().catch(error=>{
+  initPromise=null;
+  status('Servizio segnalazioni non disponibile: '+(error?.message||'controlla la connessione e riprova.'));
+  console.error('RIDE safety init',error);
+  throw error;
+ });
+ return initPromise;
 }
 document.addEventListener('click',async e=>{
- const create=e.target.closest('[data-rs-create]');if(create){e.preventDefault();createReport();return}
- const vote=e.target.closest('[data-rs-vote]');if(vote){vote.disabled=true;try{await window.RIDE_ROAD_SAFETY.vote(vote.dataset.rsId,vote.dataset.rsVote)}catch(err){toast(err.message||'Conferma non riuscita.')}finally{vote.disabled=false}return}
- const close=e.target.closest('[data-rs-resolve]');if(close){close.disabled=true;try{await resolve(close.dataset.rsResolve)}catch(err){toast(err.message||'Chiusura non riuscita.')}finally{close.disabled=false}}
+ const target=e.target instanceof Element?e.target:null;if(!target)return;
+ const create=target.closest('[data-rs-create]');if(create){e.preventDefault();createReport();return}
+ const vote=target.closest('[data-rs-vote]');if(vote){vote.disabled=true;try{await window.RIDE_ROAD_SAFETY.vote(vote.dataset.rsId,vote.dataset.rsVote)}catch(err){toast(err.message||'Conferma non riuscita.')}finally{vote.disabled=false}return}
+ const close=target.closest('[data-rs-resolve]');if(close){close.disabled=true;try{await resolve(close.dataset.rsResolve)}catch(err){toast(err.message||'Chiusura non riuscita.')}finally{close.disabled=false}}
 });
 document.addEventListener('submit',async e=>{
- if(e.target?.id!=='road-safety-form')return;
+ if(!(e.target instanceof HTMLFormElement)||e.target.id!=='road-safety-form')return;
  e.preventDefault();const button=e.target.querySelector('[type=submit]');button.disabled=true;button.textContent='Pubblicazione…';
  try{await submitReport(e.target)}catch(err){toast(err.message||'Segnalazione non pubblicata.')}finally{button.disabled=false;button.textContent='Pubblica segnalazione'}
 });
