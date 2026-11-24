@@ -106,3 +106,13 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - Modalità guida: quando il GPS rileva per più aggiornamenti una posizione distante dal tracciato, compare un comando manuale per ricalcolare da posizione attuale verso le tappe non ancora raggiunte e la destinazione.
 - Il ricalcolo non parte automaticamente: il motociclista deve fermarsi in sicurezza e richiederlo esplicitamente. Il nuovo tracciato viene salvato nella libreria personale.
 - Nessun backend o servizio di posizione in background; GPS attivo solo mentre la modalità guida resta aperta.
+
+
+## RIDE V25 — Modalità GPS con pausa e ripresa
+
+- La modalità guida consente di mettere in pausa e riprendere il tracciamento GPS senza chiudere la sessione.
+- Durante la pausa il watch GPS viene fermato, la velocità viene azzerata e la distanza non viene incrementata.
+- Il tempo di viaggio e la velocità media escludono i periodi di pausa.
+- Alla ripresa viene richiesto un nuovo fix GPS e non viene conteggiato il salto di posizione durante la pausa.
+- Su browser compatibili RIDE richiede il Screen Wake Lock mentre il GPS è attivo, per ridurre lo spegnimento automatico dello schermo. Il lock viene rilasciato in pausa o a fine sessione e può essere riacquisito quando la pagina torna visibile.
+- La sessione e le tracce restano locali; il GPS non viene registrato in background quando la pagina è chiusa. La compatibilità del Wake Lock dipende da browser, dispositivo e modalità di installazione.
