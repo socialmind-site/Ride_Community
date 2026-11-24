@@ -19,8 +19,12 @@
   }
   function fit(center,bounds,width,height,maxZoom){
     if(!bounds?.length)return{center,zoom:6};
-    const pts=bounds.map(p=>pixel(p[0],p[1],0)),xs=pts.map(p=>p.x),ys=pts.map(p=>p.y);
-    const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+    let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+    for(const point of bounds){
+      const p=pixel(point[0],point[1],0);
+      if(p.x<minX)minX=p.x;if(p.x>maxX)maxX=p.x;
+      if(p.y<minY)minY=p.y;if(p.y>maxY)maxY=p.y;
+    }
     const spanX=Math.max(1,maxX-minX),spanY=Math.max(1,maxY-minY);
     const ratio=Math.min(Math.max(1,width-70)/spanX,Math.max(1,height-70)/spanY);
     const zoom=Math.max(3,Math.min(maxZoom||14,Math.floor(Math.log2(Math.max(1,ratio)))));
@@ -96,7 +100,8 @@
           const d=coords.map((p,i)=>(i?'L':'M')+p.x.toFixed(1)+' '+p.y.toFixed(1)).join(' ');
           paths.push('<path d="'+d+'" fill="none" stroke="'+safe(layer.style.color||'#b8f52e')+'" stroke-width="'+Math.max(3,Number(layer.style.weight)||4)+'" stroke-opacity="'+(layer.style.opacity??.9)+'" '+(layer.style.dashArray?'stroke-dasharray="'+safe(layer.style.dashArray)+'" ':'')+'stroke-linecap="round" stroke-linejoin="round"/>');
         }else if(layer.kind==='circle'){
-          const p=pixel(layer.point[0],layer.point[1],z);let x=p.x-center.x;if(x>count*TILE/2)x-=count*TILE;if(x< -count*TILE/2)x+=count*TILE;
+          const point=layer.point[0]||layer.point;
+          const p=pixel(point[0],point[1],z);let x=p.x-center.x;if(x>count*TILE/2)x-=count*TILE;if(x< -count*TILE/2)x+=count*TILE;
           const sx=w/2+x,sy=h/2+p.y-center.y;
           paths.push('<circle cx="'+sx+'" cy="'+sy+'" r="'+(Number(layer.style.radius)||7)+'" fill="'+safe(layer.style.fillColor||'#b8f52e')+'" fill-opacity="'+(layer.style.fillOpacity??1)+'" stroke="'+safe(layer.style.color||'#0b140d')+'" stroke-width="'+(Number(layer.style.weight)||2)+'"/>');
         }else if(layer.kind==='marker'){

@@ -1,5 +1,5 @@
-const CACHE='ride-v31-1-native-raster-map-fast-open-20261124';
-const RELEASE='v31.1';
+const CACHE='ride-v31-2-native-raster-map-marker-fix-20261124';
+const RELEASE='v31.2';
 const FILES=[
   './',
   './index.html',

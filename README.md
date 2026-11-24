@@ -185,3 +185,4 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - La scheda del viaggio non dipende più dalla disponibilità di CDN JavaScript per il motore cartografico.
 - Aggiornata la cache PWA alla V31.
 - RIDE V31.1: la mappa disegna immediatamente punti e soste salvate; il routing stradale dettagliato viene caricato in background e sostituisce il tracciato indicativo appena disponibile.
+- RIDE V31.2: corretta la proiezione dei marker di partenza/arrivo e reso il calcolo dei limiti della mappa sicuro anche con tracce GPS molto dense.
