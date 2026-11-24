@@ -155,3 +155,10 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - Gli errori di caricamento cartografico non interrompono il dettaglio del viaggio: l'elenco delle soste resta disponibile e viene mostrato un messaggio di fallback.
 - Aggiornata la cache PWA alla V29.
 - Fix aggiuntivo V29.1: la chiusura del modal invalida anche le inizializzazioni pendenti; una mappa precedente non può cancellare lo stato di una nuova apertura dello stesso viaggio.
+
+## RIDE V29.2 — Stabilizzazione apertura viaggi
+
+- Disattivato temporaneamente il caricamento automatico della mappa interattiva V28: su alcuni dispositivi mobili il rendering WebGL nel modal può causare la chiusura della scheda.
+- Il dettaglio viaggio torna a usare il flusso stabile V27/V26; giornate, budget, carburante, soste salvate, rimozione e link Google Maps restano disponibili.
+- Il file V28 rimane nel repository come modulo non caricato, per una successiva reimplementazione isolata e più leggera.
+- Aggiornata la cache PWA alla V29.2 per non riutilizzare il vecchio HTML che caricava la mappa.

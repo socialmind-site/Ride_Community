@@ -1,12 +1,11 @@
-const CACHE='ride-v29-stable-trip-map-fix1-20261124';
-const RELEASE='v29.1';
+const CACHE='ride-v29-2-safe-trip-detail-20261124';
+const RELEASE='v29.2';
 const FILES=[
   './',
   './index.html',
   './routes-catalog.js',
   './europe-routes.js',
   './ride-v26.js',
-  './ride-v28.js',
   './manifest.webmanifest',
   './icon.svg',
   './assets/garda-road.webp',
