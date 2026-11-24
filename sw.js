@@ -1,5 +1,5 @@
-const CACHE='ride-v21-multi-stop-routing-20261124';
-const RELEASE='v21';
+const CACHE='ride-v22-route-comparison-20261124';
+const RELEASE='v22';
 const FILES=[
   './',
   './index.html',
