@@ -51,12 +51,27 @@ function render(){
 function openMapReport(id){
  const report=activeReports().find(r=>String(r.id)===String(id));if(!report)return;
  const item=CATEGORIES.find(c=>c[0]===report.category)||CATEGORIES[CATEGORIES.length-1];
- const color=CATEGORY_COLORS[report.category]||'#94a3b8';
+ const visual=window.rideReportVisual?window.rideReportVisual(report):{color:CATEGORY_COLORS[report.category]||'#94a3b8',label:item[1],svg:''};
  const mine=sessionUser&&report.author_id===sessionUser.id;
  const maps='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(report.latitude+','+report.longitude);
- const html="<div class='rs-map-report-modal' style='--rs-report-color:"+color+"'><span class='rs-map-report-kind'><i class='rs-map-report-dot'></i>"+esc(item[1])+"</span><h3>"+esc(report.title)+"</h3>"+(report.road_name?"<p>📍 "+esc(report.road_name)+"</p>":"")+(report.description?"<p>"+esc(report.description)+"</p>":"")+"<div class='rs-map-report-meta'><span>Segnalata "+esc(dateText(report.created_at))+"</span><span>✓ "+Number(report.confirmations||0)+" conferme</span><span>Scade "+esc(dateText(report.expires_at))+"</span></div><div class='rs-map-report-actions'><button type='button' data-rs-vote='still_there' data-rs-id='"+esc(report.id)+"'>⚠️ Ancora presente</button><button type='button' data-rs-vote='resolved' data-rs-id='"+esc(report.id)+"'>✓ Risolto</button><a target='_blank' rel='noopener' href='"+maps+"'>Apri posizione ↗</a>"+(mine?"<button type='button' data-rs-resolve='"+esc(report.id)+"'>Chiudi segnalazione</button>":"")+"</div><div class='modal-actions'><button type='button' class='secondary-btn' data-action='close-modal'>Chiudi</button></div></div>";
- if(typeof showModal==='function')showModal('Segnalazione stradale',html);
+ const actionSvg=path=>'<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+path+'</svg>';
+ const confirmIcon=actionSvg('<path d="m5 12 4 4L19 6"/>');
+ const resolvedIcon=actionSvg('<circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/>');
+ const navIcon=actionSvg('<path d="M14 3h7v7M10 14 21 3"/><path d="M19 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6"/>');
+ const pinIcon=actionSvg('<path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>');
+ const description=report.description?'<p class="rs-map-report-description">'+esc(report.description)+'</p>':'';
+ const location=report.road_name?'<div class="rs-map-report-location">'+pinIcon+'<span>'+esc(report.road_name)+'</span></div>':'';
+ const html="<div class='rs-map-report-modal' style='--rs-report-color:"+visual.color+"'>"+
+  "<div class='rs-map-report-hero'><span class='rs-map-report-icon'>"+visual.svg+"</span><div class='rs-map-report-heading'><span class='rs-map-report-kind'>"+esc(visual.label)+"</span><h3>"+esc(report.title)+"</h3><span class='rs-map-report-active'><i></i>Segnalazione attiva</span></div></div>"+
+  location+description+
+  "<div class='rs-map-report-meta'><div><span>CONFERME</span><strong>"+Number(report.confirmations||0)+"</strong></div><div><span>SEGNALATA</span><strong>"+esc(dateText(report.created_at))+"</strong></div><div><span>SCADENZA</span><strong>"+esc(dateText(report.expires_at))+"</strong></div></div>"+
+  "<div class='rs-map-report-section-label'>AGGIORNA LA COMMUNITY</div>"+
+  "<div class='rs-map-report-actions'><button type='button' class='rs-report-action-confirm' data-rs-vote='still_there' data-rs-id='"+esc(report.id)+"'>"+confirmIcon+"<span><strong>Confermo</strong><small>È ancora presente</small></span></button><button type='button' class='rs-report-action-resolved' data-rs-vote='resolved' data-rs-id='"+esc(report.id)+"'>"+resolvedIcon+"<span><strong>Problema risolto</strong><small>Non è più presente</small></span></button><a class='rs-report-action-nav' target='_blank' rel='noopener' href='"+maps+"'>"+navIcon+"<span>Apri indicazioni</span></a>"+(mine?"<button type='button' class='rs-report-action-owner' data-rs-resolve='"+esc(report.id)+"'>"+resolvedIcon+"<span><strong>Chiudi segnalazione</strong><small>Rimuovi il tuo avviso</small></span></button>":"")+"</div>"+
+  "<p class='rs-map-report-note'>Le conferme aiutano gli altri motociclisti a capire se il pericolo è ancora presente. Le segnalazioni scadono automaticamente dopo 24 ore.</p>"+
+ "</div>";
+ if(typeof showModal==='function')showModal('Segnalazione community',html);
 }
+
 async function load(){
  if(!client)return;
  loading=true;status('Aggiorno le segnalazioni della community…');
