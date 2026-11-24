@@ -202,3 +202,13 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - I livelli SVG, le tile raster, i marker e i controlli assoluti vengono ora posizionati rispetto al riquadro cartografico e non al modal o al viewport.
 - Nessuna modifica ai dati dei viaggi o alle soste.
 - Aggiornata la cache PWA alla V32.1.
+
+## RIDE V33 — Roadbook Map & Interactive Itinerary
+
+- Restyling della mappa: pannello Roadbook con nome del viaggio, chilometri pianificati, numero di giornate e soste salvate.
+- Mappa più ampia e pulita, con percorso evidenziato da bordo chiaro e linea colorata per giornata, frecce direzionali, partenza P e arrivo A.
+- Marker delle soste ridisegnati come pin colorati per categoria; la sosta selezionata viene evidenziata e richiamata in una scheda rapida sovrapposta alla mappa.
+- Filtri giornalieri più leggibili con nome dell'itinerario e colore dedicato.
+- Timeline delle soste raggruppata per giornata, con azioni “Centra” e “Scheda”: centrare una sosta seleziona la giornata, porta la mappa sul punto e ingrandisce il dettaglio.
+- Il motore raster V32, il caricamento immediato, i dati locali e l'aggiornamento delle soste restano invariati.
+- Aggiornata la cache PWA alla V33.

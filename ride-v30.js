@@ -30,6 +30,39 @@
   .trip-v30-order-actions{display:flex;gap:5px;align-items:center}
   .trip-v30-order-actions button,.trip-v30-order-actions a{display:inline-flex;align-items:center;justify-content:center;min-height:26px;padding:0 8px;border:1px solid #40583a;border-radius:7px;background:#1b2d1c;color:var(--lime);font-size:7px;font-weight:900;text-decoration:none;white-space:nowrap}
   .trip-v30-map-empty{padding:10px;border:1px dashed #3b503c;border-radius:9px;color:#9eaea1;font-size:8px;line-height:1.5}
+
+  .trip-v33-trip-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:12px 0;padding:10px;border:1px solid #344a38;border-radius:12px;background:#0c1710}
+  .trip-v33-trip-summary>div{min-width:0;padding:7px 8px;border-radius:8px;background:#142019}
+  .trip-v33-trip-summary small{display:block;color:#91a293;font-size:7px;font-weight:850;letter-spacing:.6px}
+  .trip-v33-trip-summary strong{display:block;margin-top:4px;color:#edf5e9;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .trip-v33-trip-summary .accent strong{color:var(--lime)}
+  .trip-v33-open-map{display:flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:7px 12px;text-align:left}
+  .trip-v33-open-map>span:first-child{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:#334a28;font-size:17px}
+  .trip-v33-open-map>span:nth-child(2){display:block;min-width:0;flex:1}
+  .trip-v33-open-map b{display:block;font-size:9px}
+  .trip-v33-open-map small{display:block;margin-top:3px;color:#a7b89d;font-size:7px;font-weight:600}
+  .trip-v33-open-map>i{font-size:14px;font-style:normal}
+  .trip-v30-map-filters button{display:inline-flex;align-items:center;gap:7px;min-height:37px;padding:4px 11px}
+  .trip-v33-filter-index{display:grid;place-items:center;width:21px;height:21px;border-radius:7px;background:#263a20;color:var(--lime);font-size:8px}
+  .trip-v33-filter-copy{display:block;text-align:left}
+  .trip-v33-filter-copy b{display:block;color:inherit;font-size:8px}
+  .trip-v33-filter-copy small{display:block;max-width:130px;overflow:hidden;margin-top:2px;color:#91a293;font-size:6px;text-overflow:ellipsis;white-space:nowrap}
+  .trip-v30-map-filters button.active .trip-v33-filter-index{background:var(--lime);color:#17240f}
+  .trip-v33-day-group{margin:10px 0 13px}
+  .trip-v33-day-group-head{display:flex;align-items:center;gap:8px;margin:0 0 7px}
+  .trip-v33-day-group-head>span{display:grid;place-items:center;width:25px;height:25px;border:1px solid #526c42;border-radius:8px;background:#263a20;color:var(--lime);font-size:8px;font-weight:950}
+  .trip-v33-day-group-head>strong{min-width:0;flex:1;color:#eaf3e5;font-size:8px}
+  .trip-v33-day-group-head>small{color:#91a293;font-size:7px}
+  .trip-v33-order-row{display:grid;grid-template-columns:26px 27px minmax(0,1fr) auto;gap:7px;align-items:center;margin:5px 0;padding:8px;border:1px solid #2d4233;border-radius:11px;background:linear-gradient(110deg,#142019,#0c1710)}
+  .trip-v33-order-number{display:grid;place-items:center;width:25px;height:25px;border-radius:8px;background:#263a20;color:var(--lime);font-size:8px;font-weight:950}
+  .trip-v33-order-icon{display:grid;place-items:center;width:26px;height:26px;border-radius:8px;background:#1d3022;font-size:13px}
+  .trip-v33-order-copy{min-width:0}
+  .trip-v33-order-copy strong{display:block;color:#edf4e9;font-size:8px;overflow-wrap:anywhere}
+  .trip-v33-order-copy small{display:block;margin-top:3px;color:#91a293;font-size:7px}
+  .trip-v33-order-actions{display:flex;gap:5px;align-items:center}
+  .trip-v33-order-actions button{min-height:30px;padding:0 8px;border:1px solid #40583a;border-radius:8px;background:#1b2d1c;color:var(--lime);font-size:7px;font-weight:900;white-space:nowrap}
+  .trip-v33-order-actions button:first-child{background:#243720;border-color:#536d42;color:#eaf3e5}
+  @media(max-width:560px){.trip-v33-trip-summary{gap:5px;padding:7px}.trip-v33-trip-summary>div{padding:7px 5px}.trip-v33-trip-summary strong{font-size:11px}.trip-v33-order-row{grid-template-columns:23px 25px minmax(0,1fr)}.trip-v33-order-actions{grid-column:3;justify-content:flex-start}.trip-v33-order-actions button{min-height:32px}}
   .trip-v30-marker{background:transparent;border:0}
   .trip-v30-marker span{width:29px;height:29px;display:flex;align-items:center;justify-content:center;border:2px solid #08110c;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.4);color:#10190c;font-size:10px;font-weight:950}
   .trip-v30-place-button{min-height:26px;padding:0 8px;border:1px solid #526c42;border-radius:7px;background:#24391f;color:var(--lime);font-size:7px;font-weight:950;white-space:nowrap}
@@ -299,7 +332,14 @@
   }
   function tripMapMarkup(trip){
     const days=[...(trip.days||[])].sort((a,b)=>String(a.date).localeCompare(String(b.date)));
-    return '<section class="trip-v30-map-panel" data-v30-trip-map-panel="'+esc(trip.id)+'"><div class="trip-v30-map-head"><div><span class="trip-v30-kicker">RIDE V30 · MAPPA LEGGERA</span><strong>Mappa interattiva del viaggio</strong><small>Cartografia stradale senza WebGL. Le soste vengono numerate lungo il percorso.</small></div><strong>'+days.length+' '+(days.length===1?'GIORNATA':'GIORNATE')+'</strong></div><button type="button" class="trip-v30-open-map" data-v30-open-map="'+esc(trip.id)+'">⌖ Apri mappa del viaggio</button><div class="trip-v30-map-wrap" data-v30-map-wrap="'+esc(trip.id)+'" hidden><div class="trip-v30-map-filters"><button type="button" class="active" data-v30-map-filter="all" data-trip-id="'+esc(trip.id)+'">Tutto il viaggio</button>'+days.map((day,i)=>'<button type="button" data-v30-map-filter="'+esc(day.id)+'" data-trip-id="'+esc(trip.id)+'">G'+(i+1)+' · '+esc(formatDiaryDate(day.date))+'</button>').join('')+'</div><div class="trip-v30-map-canvas" id="trip-v30-map-'+esc(trip.id)+'"></div><div class="trip-v30-map-status" data-v30-map-status="'+esc(trip.id)+'">La mappa verrà caricata solo quando la apri.</div><div class="trip-v30-map-legend"><span><i class="trip-v30-legend-dot" style="background:#ffc94d"></i> Carburante</span><span><i class="trip-v30-legend-dot" style="background:#e58bd1"></i> Ristoranti</span><span><i class="trip-v30-legend-dot" style="background:#57c6ff"></i> Alloggi</span><span>Linee colorate: giornate</span></div><div class="trip-v30-map-order"><strong>Ordine delle soste</strong><div class="trip-v30-map-order-list" data-v30-map-order="'+esc(trip.id)+'"><div class="trip-v30-map-empty">Caricamento soste…</div></div></div></div></section>';
+    const palette=['#b8f52e','#57c6ff','#e58bd1','#ffc94d','#b79aff','#61d5b5','#f08c72'];
+    const distance=days.reduce((sum,day)=>sum+(Number(routes.find(r=>String(r.id)===String(day.routeId))?.distance)||0),0);
+    const stops=days.reduce((sum,day)=>sum+(day.stopSelections||[]).length,0);
+    const filters='<button type="button" class="active" data-v30-map-filter="all" data-trip-id="'+esc(trip.id)+'"><span class="trip-v33-filter-index">↗</span><span class="trip-v33-filter-copy"><b>Tutto il viaggio</b><small>'+days.length+' '+(days.length===1?'giornata':'giornate')+'</small></span></button>'+days.map((day,i)=>{
+      const route=routes.find(r=>String(r.id)===String(day.routeId));
+      return '<button type="button" data-v30-map-filter="'+esc(day.id)+'" data-trip-id="'+esc(trip.id)+'"><span class="trip-v33-filter-index" style="background:'+palette[i%palette.length]+';color:#13200f">'+(i+1)+'</span><span class="trip-v33-filter-copy"><b>G'+(i+1)+'</b><small>'+esc(route?.name||formatDiaryDate(day.date))+'</small></span></button>';
+    }).join('');
+    return '<section class="trip-v30-map-panel" data-v30-trip-map-panel="'+esc(trip.id)+'"><div class="trip-v30-map-head"><div><span class="trip-v30-kicker">RIDE V33 · ROADBOOK</span><strong>Il tuo itinerario, sulla mappa.</strong><small>Segui il tracciato, esplora le tappe e centra ogni sosta con un tocco.</small></div><strong>'+days.length+' '+(days.length===1?'GIORNATA':'GIORNATE')+'</strong></div><div class="trip-v33-trip-summary"><div><small>DISTANZA PIANIFICATA</small><strong>'+(distance?Math.round(distance)+' km':'—')+'</strong></div><div><small>GIORNATE</small><strong>'+days.length+'</strong></div><div class="accent"><small>SOSTE SALVATE</small><strong>'+stops+'</strong></div></div><button type="button" class="trip-v30-open-map trip-v33-open-map" data-v30-open-map="'+esc(trip.id)+'"><span>⌖</span><span><b>Apri mappa interattiva</b><small>Percorso, tappe e punti di interesse</small></span><i>↗</i></button><div class="trip-v30-map-wrap" data-v30-map-wrap="'+esc(trip.id)+'" hidden><div class="trip-v30-map-filters">'+filters+'</div><div class="trip-v30-map-canvas" id="trip-v30-map-'+esc(trip.id)+'"></div><div class="trip-v30-map-status" data-v30-map-status="'+esc(trip.id)+'">La mappa verrà caricata solo quando la apri.</div><div class="trip-v30-map-legend"><span><i class="trip-v30-legend-dot" style="background:#b8f52e"></i> Percorso / partenza</span><span><i class="trip-v30-legend-dot" style="background:#ffc94d"></i> Carburante</span><span><i class="trip-v30-legend-dot" style="background:#e58bd1"></i> Ristoranti</span><span><i class="trip-v30-legend-dot" style="background:#57c6ff"></i> Pernottamenti</span></div><div class="trip-v30-map-order"><strong>Itinerario e soste</strong><div class="trip-v30-map-order-list" data-v30-map-order="'+esc(trip.id)+'"><div class="trip-v30-map-empty">Le soste salvate appariranno qui, in ordine di percorrenza.</div></div></div></div></section>';
   }
   function setMapStatus(tripId,message){
     const el=document.querySelector('[data-v30-map-status="'+CSS.escape(String(tripId))+'"]');if(el)el.textContent=message;
@@ -451,7 +491,7 @@
         searchPois(dayId,category,search);return;
       }
       const card=event.target.closest('[data-v30-place-card]');
-      if(card){event.preventDefault();event.stopImmediatePropagation();showPlaceCard(card.dataset.v30DayId,card.dataset.v30Category,card.dataset.v30PoiId);return}
+      if(card){event.preventDefault();event.stopImmediatePropagation();window.RIDE_V33?.selectStop(card.dataset.v30DayId,card.dataset.v30Category,card.dataset.v30PoiId);showPlaceCard(card.dataset.v30DayId,card.dataset.v30Category,card.dataset.v30PoiId);return}
       const open=event.target.closest('[data-v30-open-map]');
       if(open){event.preventDefault();event.stopImmediatePropagation();if(window.RIDE_V32?.openTripMap)window.RIDE_V32.openTripMap(open.dataset.v30OpenMap);else openTripMap(open.dataset.v30OpenMap);return}
       const filter=event.target.closest('[data-v30-map-filter]');

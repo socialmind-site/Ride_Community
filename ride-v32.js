@@ -69,11 +69,30 @@
     return current.days.filter(item=>current.filter==='all'||String(item.day.id)===String(current.filter));
   }
   function orderMarkup(){
-    const rows=[];
-    visibleDays().forEach(item=>item.stops.forEach((stop,index)=>{
-      rows.push('<article class="trip-v30-map-order-row"><span class="trip-v30-order-num">'+(item.dayIndex+1)+'.'+(index+1)+'</span><span class="trip-v30-order-copy"><strong>'+esc(stop.name)+'</strong><small>'+categoryIcon(stop.category)+' '+esc(categoryLabel(stop.category))+' · '+Math.round(stop.alongKm)+' km dalla partenza</small></span><span class="trip-v30-order-actions"><button type="button" data-v30-place-card="1" data-v30-day-id="'+esc(item.day.id)+'" data-v30-category="'+esc(stop.category)+'" data-v30-poi-id="'+esc(stop.id)+'">Scheda</button></span></article>');
-    }));
-    return rows.join('')||'<div class="trip-v30-map-empty">Nessuna sosta selezionata per questa visualizzazione.</div>';
+    const groups=[];
+    visibleDays().forEach(item=>{
+      if(!item.stops.length)return;
+      const title=item.route?.name||item.day.title||('Giornata '+(item.dayIndex+1));
+      const rows=item.stops.map((stop,index)=>{
+        const number=(item.dayIndex+1)+'.'+(index+1);
+        return '<article class="trip-v33-order-row"><span class="trip-v33-order-number">'+number+'</span><span class="trip-v33-order-icon">'+categoryIcon(stop.category)+'</span><span class="trip-v33-order-copy"><strong>'+esc(stop.name)+'</strong><small>'+esc(categoryLabel(stop.category))+' · '+Math.round(stop.alongKm)+' km dalla partenza</small></span><span class="trip-v33-order-actions"><button type="button" data-v33-focus-stop="1" data-v33-day-id="'+esc(item.day.id)+'" data-v33-poi-id="'+esc(stop.id)+'">Centra</button><button type="button" data-v30-place-card="1" data-v30-day-id="'+esc(item.day.id)+'" data-v30-category="'+esc(stop.category)+'" data-v30-poi-id="'+esc(stop.id)+'">Scheda</button></span></article>';
+      }).join('');
+      groups.push('<section class="trip-v33-day-group"><div class="trip-v33-day-group-head"><span>G'+(item.dayIndex+1)+'</span><strong>'+esc(title)+'</strong><small>'+esc(formatDiaryDate(item.day.date))+' · '+item.stops.length+' '+(item.stops.length===1?'sosta':'soste')+'</small></div>'+rows+'</section>');
+    });
+    return groups.join('')||'<div class="trip-v30-map-empty">Nessuna sosta selezionata per questa visualizzazione.</div>';
+  }
+  function routeDistance(points){
+    let total=0;
+    for(let i=1;i<points.length;i++)total+=distance({lat:points[i-1][0],lon:points[i-1][1]},{lat:points[i][0],lon:points[i][1]});
+    return total;
+  }
+  function selectedStop(){
+    if(!current?.selectedStopId)return null;
+    for(const item of current.days){
+      const stop=item.stops.find(p=>String(p.id)===String(current.selectedStopId));
+      if(stop)return{...stop,day:item.day,dayIndex:item.dayIndex};
+    }
+    return null;
   }
   function render(){
     if(!current||!current.canvas?.isConnected)return;
@@ -86,29 +105,45 @@
         tiles.push('<img class="trip-v32-tile" draggable="false" alt="" src="https://tile.openstreetmap.org/'+z+'/'+wrapped+'/'+y+'.png" style="left:'+(x*TILE-left)+'px;top:'+(y*TILE-top)+'px">');
       }
     }
-    const paths=[],markers=[],pointsForBounds=[];
-    visibleDays().forEach(item=>{
+    const paths=[],markers=[];
+    const visible=visibleDays();
+    visible.forEach(item=>{
       const color=COLORS[item.dayIndex%COLORS.length],pts=item.points||[];
-      pts.forEach(p=>pointsForBounds.push([p[0],p[1]]));
       if(pts.length>1){
-        const stride=Math.max(1,Math.ceil(pts.length/1000)),coords=pts.filter((p,i)=>i%stride===0||i===pts.length-1).map(p=>pointOnScreen(p,current.view,w,h));
+        const stride=Math.max(1,Math.ceil(pts.length/1100)),coords=pts.filter((p,i)=>i%stride===0||i===pts.length-1).map(p=>pointOnScreen(p,current.view,w,h));
         const d=coords.map((p,i)=>(i?'L':'M')+p.x.toFixed(1)+' '+p.y.toFixed(1)).join(' ');
-        paths.push('<path d="'+d+'" fill="none" stroke="'+color+'" stroke-width="7" stroke-opacity=".18" stroke-linecap="round" stroke-linejoin="round"/><path d="'+d+'" fill="none" stroke="'+color+'" stroke-width="3.5" stroke-opacity="'+(item.approximate?'.7':'.98')+'" '+(item.approximate?'stroke-dasharray="7 5" ':'')+'stroke-linecap="round" stroke-linejoin="round"/>');
+        paths.push('<path d="'+d+'" fill="none" stroke="#ffffff" stroke-width="10" stroke-opacity=".9" stroke-linecap="round" stroke-linejoin="round"/>');
+        paths.push('<path d="'+d+'" fill="none" stroke="'+color+'" stroke-width="5.5" stroke-opacity="'+(item.approximate?'.78':'1')+'" '+(item.approximate?'stroke-dasharray="9 6" ':'')+'stroke-linecap="round" stroke-linejoin="round"/>');
         const first=coords[0],last=coords[coords.length-1];
-        paths.push('<circle cx="'+first.x+'" cy="'+first.y+'" r="6" fill="#b8f52e" stroke="#10190c" stroke-width="2"/><circle cx="'+last.x+'" cy="'+last.y+'" r="6" fill="#f07f72" stroke="#10190c" stroke-width="2"/>');
+        paths.push('<circle cx="'+first.x+'" cy="'+first.y+'" r="8" fill="#b8f52e" stroke="#102017" stroke-width="2.5"/><text x="'+first.x+'" y="'+(first.y+3.2)+'" text-anchor="middle" font-size="8" font-weight="950" fill="#102017">P</text>');
+        paths.push('<circle cx="'+last.x+'" cy="'+last.y+'" r="8" fill="#f07f72" stroke="#102017" stroke-width="2.5"/><text x="'+last.x+'" y="'+(last.y+3.2)+'" text-anchor="middle" font-size="8" font-weight="950" fill="#102017">A</text>');
+        [0.34,0.68].forEach(fraction=>{
+          const pos=Math.min(coords.length-1,Math.max(1,Math.round((coords.length-1)*fraction))),a=coords[pos-1],b=coords[pos],angle=Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI;
+          paths.push('<path d="M -6 -5 L 7 0 L -6 5 Z" transform="translate('+b.x.toFixed(1)+' '+b.y.toFixed(1)+') rotate('+angle.toFixed(1)+')" fill="#ffffff" stroke="'+color+'" stroke-width="1.2"/>');
+        });
       }
       item.stops.forEach((stop,index)=>{
         const p=pointOnScreen([stop.lat,stop.lon],current.view,w,h);
-        if(p.x< -30||p.x>w+30||p.y< -30||p.y>h+30)return;
-        markers.push('<button type="button" class="trip-v32-marker" aria-label="Vedi scheda '+esc(stop.name)+'" data-v30-place-card="1" data-v30-day-id="'+esc(item.day.id)+'" data-v30-category="'+esc(stop.category)+'" data-v30-poi-id="'+esc(stop.id)+'" style="left:'+p.x+'px;top:'+p.y+'px;background:'+categoryColor(stop.category)+'">'+(index+1)+'</button>');
-        pointsForBounds.push([stop.lat,stop.lon]);
+        if(p.x< -36||p.x>w+36||p.y< -42||p.y>h+36)return;
+        const selected=String(stop.id)===String(current.selectedStopId);
+        markers.push('<button type="button" class="trip-v33-marker'+(selected?' selected':'')+'" aria-label="Vedi scheda '+esc(stop.name)+'" data-v30-place-card="1" data-v30-day-id="'+esc(item.day.id)+'" data-v30-category="'+esc(stop.category)+'" data-v30-poi-id="'+esc(stop.id)+'" style="left:'+p.x+'px;top:'+p.y+'px;--marker-color:'+categoryColor(stop.category)+'"><span>'+(index+1)+'</span><i>'+categoryIcon(stop.category)+'</i></button>');
       });
     });
-    canvas.innerHTML='<div class="trip-v32-content"><div class="trip-v32-tiles">'+tiles.join('')+'</div><svg class="trip-v32-routes" viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none">'+paths.join('')+'</svg><div class="trip-v32-markers">'+markers.join('')+'</div></div><div class="trip-v32-controls"><button type="button" data-v32-zoom="in" aria-label="Ingrandisci">+</button><button type="button" data-v32-zoom="out" aria-label="Riduci">−</button><button type="button" data-v32-zoom="fit" aria-label="Centra percorso">⌖</button></div><div class="trip-v32-attribution"><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a></div>';
+    const totalKm=visible.reduce((sum,item)=>sum+(n(item.route?.distance)>0?n(item.route.distance):routeDistance(item.points)),0);
+    const stopCount=visible.reduce((sum,item)=>sum+item.stops.length,0);
+    const trip=tripById(current.tripId);
+    const activeDay=current.filter==='all'?null:visible[0];
+    const title=activeDay?(activeDay.route?.name||activeDay.day.title||'Giornata '+(activeDay.dayIndex+1)):(trip?.title||trip?.name||'Il tuo road trip');
+    const subtitle=current.filter==='all'?(visible.length+' '+(visible.length===1?'giornata':'giornate')+' · '+stopCount+' '+(stopCount===1?'sosta pianificata':'soste pianificate')):('Giornata '+(activeDay?activeDay.dayIndex+1:'')+' · '+stopCount+' '+(stopCount===1?'sosta':'soste'));
+    const hud='<div class="trip-v33-map-hud"><span class="trip-v33-hud-kicker"><i></i> RIDE ROADBOOK</span><strong>'+esc(title)+'</strong><small>'+esc(subtitle)+'</small><div class="trip-v33-hud-stats"><span><b>'+Math.round(totalKm)+'</b> km</span><span><b>'+stopCount+'</b> soste</span></div></div>';
+    const selected=selectedStop();
+    const selectedChip=selected?'<button type="button" class="trip-v33-selected-chip" data-v30-place-card="1" data-v30-day-id="'+esc(selected.day.id)+'" data-v30-category="'+esc(selected.category)+'" data-v30-poi-id="'+esc(selected.id)+'"><span>'+categoryIcon(selected.category)+'</span><span><small>SOSTA SELEZIONATA</small><b>'+esc(selected.name)+'</b></span><i>Vedi scheda ↗</i></button>':'';
+    canvas.innerHTML='<div class="trip-v32-content"><div class="trip-v32-tiles">'+tiles.join('')+'</div><svg class="trip-v32-routes" viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none">'+paths.join('')+'</svg><div class="trip-v32-markers">'+markers.join('')+'</div></div>'+hud+selectedChip+'<div class="trip-v32-controls"><button type="button" data-v32-zoom="in" aria-label="Ingrandisci">+</button><button type="button" data-v32-zoom="out" aria-label="Riduci">−</button><button type="button" data-v32-zoom="fit" aria-label="Centra percorso">⌖</button></div><div class="trip-v32-attribution"><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a></div>';
     const order=document.querySelector('[data-v30-map-order="'+CSS.escape(String(current.tripId))+'"]');if(order)order.innerHTML=orderMarkup();
     document.querySelectorAll('[data-v30-map-filter][data-trip-id="'+CSS.escape(String(current.tripId))+'"]').forEach(b=>b.classList.toggle('active',b.dataset.v30MapFilter===current.filter));
     canvas.querySelectorAll('.trip-v32-tile').forEach(img=>img.addEventListener('error',()=>{img.style.opacity='.15';mapStatus(current.tripId,'Tracciato e soste visibili; alcune immagini cartografiche non sono raggiungibili.')},{once:true}));
   }
+
   function fitCurrent(){
     if(!current)return;
     current.view=fitView(visibleDays(),current.canvas.clientWidth||340,current.canvas.clientHeight||280);
@@ -122,6 +157,7 @@
       const day=byId.get(String(item.day.id))||item.day;
       return{...item,day,stops:sortedStops(day,item.points)};
     });
+    if(!current.days.some(item=>item.stops.some(stop=>String(stop.id)===String(current.selectedStopId))))current.selectedStopId=null;
     render();
   }
   function loadRoads(tripId,runToken){
@@ -172,7 +208,27 @@
   function setFilter(tripId,filter){
     if(!current||String(current.tripId)!==String(tripId))return;
     current.filter=String(filter);
+    current.selectedStopId=null;
     fitCurrent();
+  }
+  function focusStop(dayId,poiId){
+    if(!current)return;
+    const item=current.days.find(day=>String(day.day.id)===String(dayId));
+    const stop=item?.stops.find(place=>String(place.id)===String(poiId));
+    if(!stop)return;
+    current.filter=String(dayId);
+    current.selectedStopId=String(poiId);
+    current.view.center={lat:n(stop.lat),lon:n(stop.lon)};
+    current.view.zoom=Math.max(13,current.view.zoom);
+    render();
+  }
+  function selectStop(dayId,category,poiId){
+    if(!current)return;
+    const item=current.days.find(day=>String(day.day.id)===String(dayId));
+    const stop=item?.stops.find(place=>String(place.id)===String(poiId));
+    if(!stop)return;
+    current.selectedStopId=String(poiId);
+    render();
   }
   function installCanvasEvents(){
     document.addEventListener('pointerdown',event=>{
@@ -200,6 +256,8 @@
       event.preventDefault();current.view.zoom=Math.max(4,Math.min(18,current.view.zoom+(event.deltaY<0?1:-1)));render();
     },{passive:false});
     document.addEventListener('click',event=>{
+      const focus=event.target.closest('[data-v33-focus-stop]');
+      if(focus){event.preventDefault();event.stopImmediatePropagation();focusStop(focus.dataset.v33DayId,focus.dataset.v33PoiId);return}
       const zoom=event.target.closest('[data-v32-zoom]');if(!zoom||!current)return;
       event.preventDefault();event.stopImmediatePropagation();
       if(zoom.dataset.v32Zoom==='fit')fitCurrent();
@@ -218,22 +276,42 @@
   function addStyles(){
     if(document.getElementById('ride-v32-style'))return;
     const style=document.createElement('style');style.id='ride-v32-style';style.textContent=`
-      .trip-v30-map-canvas{position:relative;overflow:hidden;background:#e8ece7;touch-action:none;min-height:260px}
+      .trip-v30-map-canvas{position:relative;overflow:hidden;background:#e8ece7;touch-action:none;min-height:320px;height:360px;border-radius:16px}
       .trip-v32-content{position:absolute;inset:0;will-change:transform}
       .trip-v32-tiles{position:absolute;inset:0;overflow:hidden;background:#e8ece7}
       .trip-v32-tile{position:absolute;width:256px;height:256px;max-width:none;border:0;user-select:none;-webkit-user-drag:none}
       .trip-v32-routes{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
       .trip-v32-markers{position:absolute;inset:0;pointer-events:none}
-      .trip-v32-marker{position:absolute;transform:translate(-50%,-50%);width:30px;height:30px;padding:0;border:2px solid #09120c;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.45);color:#10190c;font-size:10px;font-weight:950;pointer-events:auto}
-      .trip-v32-controls{position:absolute;top:9px;right:9px;z-index:10;display:grid;gap:5px}
-      .trip-v32-controls button{width:35px;height:35px;border:1px solid #bac4ba;border-radius:9px;background:rgba(255,255,255,.97);color:#17241b;font-size:18px;font-weight:900;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+      .trip-v33-map-hud{position:absolute;z-index:8;left:10px;top:10px;width:min(210px,calc(100% - 62px));padding:10px 12px;border:1px solid rgba(255,255,255,.28);border-radius:13px;background:rgba(12,23,16,.9);color:#f2f7ed;box-shadow:0 5px 18px rgba(0,0,0,.22);backdrop-filter:blur(8px);pointer-events:none}
+      .trip-v33-hud-kicker{display:flex;align-items:center;gap:6px;color:#b8f52e;font-size:7px;font-weight:950;letter-spacing:1.2px}
+      .trip-v33-hud-kicker i{width:6px;height:6px;border-radius:50%;background:#b8f52e;box-shadow:0 0 0 3px rgba(184,245,46,.15)}
+      .trip-v33-map-hud>strong{display:block;margin-top:5px;font-size:11px;line-height:1.25}
+      .trip-v33-map-hud>small{display:block;margin-top:3px;color:#c0cdbd;font-size:7px;line-height:1.4}
+      .trip-v33-hud-stats{display:flex;gap:12px;margin-top:8px;padding-top:7px;border-top:1px solid rgba(255,255,255,.13)}
+      .trip-v33-hud-stats span{color:#aebca9;font-size:7px}
+      .trip-v33-hud-stats b{color:#f3f8ef;font-size:10px}
+      .trip-v33-marker{position:absolute;transform:translate(-50%,-72%);width:34px;height:34px;padding:0;border:2px solid #fff;border-radius:50% 50% 50% 7px;background:var(--marker-color);box-shadow:0 3px 9px rgba(0,0,0,.4);color:#10190c;font-size:11px;font-weight:950;pointer-events:auto}
+      .trip-v33-marker span{display:grid;place-items:center;width:100%;height:100%;transform:rotate(0deg)}
+      .trip-v33-marker i{position:absolute;right:-5px;top:-5px;display:grid;place-items:center;width:16px;height:16px;border:1.5px solid #fff;border-radius:50%;background:#142018;color:#fff;font-size:8px;font-style:normal}
+      .trip-v33-marker.selected{z-index:5;transform:translate(-50%,-72%) scale(1.17);box-shadow:0 0 0 4px rgba(184,245,46,.3),0 5px 14px rgba(0,0,0,.5)}
+      .trip-v33-selected-chip{position:absolute;z-index:9;left:10px;bottom:10px;display:flex;align-items:center;gap:8px;max-width:calc(100% - 58px);padding:8px 10px;border:1px solid rgba(255,255,255,.3);border-radius:11px;background:rgba(12,23,16,.94);color:#f1f7ec;box-shadow:0 4px 15px rgba(0,0,0,.25);text-align:left}
+      .trip-v33-selected-chip>span:first-child{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:#283b25;font-size:14px}
+      .trip-v33-selected-chip>span:nth-child(2){min-width:0}
+      .trip-v33-selected-chip small{display:block;color:#b8f52e;font-size:6px;font-weight:950;letter-spacing:.8px}
+      .trip-v33-selected-chip b{display:block;overflow:hidden;max-width:145px;text-overflow:ellipsis;white-space:nowrap;font-size:8px}
+      .trip-v33-selected-chip i{color:#b8f52e;font-size:7px;font-style:normal;font-weight:900;white-space:nowrap}
+      .trip-v32-controls{position:absolute;top:10px;right:10px;z-index:10;display:grid;gap:6px}
+      .trip-v32-controls button{width:37px;height:37px;border:1px solid rgba(255,255,255,.65);border-radius:11px;background:rgba(250,252,248,.96);color:#17241b;font-size:19px;font-weight:900;box-shadow:0 3px 10px rgba(0,0,0,.2)}
+      .trip-v32-controls button:active{transform:scale(.94)}
       .trip-v32-attribution{position:absolute;right:5px;bottom:4px;z-index:10;padding:2px 5px;border-radius:4px;background:rgba(255,255,255,.9);color:#27352a;font-size:8px}
       .trip-v32-attribution a{color:#27352a}
+      @media(max-width:560px){.trip-v30-map-canvas{height:330px;min-height:300px}.trip-v33-map-hud{left:8px;top:8px;padding:8px 9px;width:min(190px,calc(100% - 58px))}.trip-v32-controls{right:8px;top:8px}.trip-v32-controls button{width:34px;height:34px}.trip-v33-selected-chip{left:8px;bottom:8px}}
     `;document.head.appendChild(style);
   }
   function start(){
     addStyles();installCanvasEvents();
     window.RIDE_V32={openTripMap,setFilter,refresh};
+    window.RIDE_V33={focusStop,selectStop};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
