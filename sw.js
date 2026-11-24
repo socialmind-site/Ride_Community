@@ -1,5 +1,5 @@
-const CACHE='ride-v20-trip-planner-20261124';
-const RELEASE='v20';
+const CACHE='ride-v21-multi-stop-routing-20261124';
+const RELEASE='v21';
 const FILES=[
   './',
   './index.html',
