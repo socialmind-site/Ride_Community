@@ -14,7 +14,7 @@
   .trip-v30-map-filters{display:flex;gap:6px;overflow-x:auto;padding:2px 0 9px}
   .trip-v30-map-filters button{flex:0 0 auto;min-height:29px;padding:0 10px;border:1px solid #354b39;border-radius:999px;background:#0d1711;color:#aab8aa;font-size:7px;font-weight:900;white-space:nowrap}
   .trip-v30-map-filters button.active{border-color:var(--lime);background:#263a20;color:var(--lime)}
-  .trip-v30-map-canvas{width:100%;height:290px;min-height:250px;overflow:hidden;border:1px solid #2e4432;border-radius:11px;background:#dfe7df;z-index:0}
+  .trip-v30-map-canvas{position:relative;isolation:isolate;display:block;width:100%;height:290px;min-height:250px;overflow:hidden;border:1px solid #2e4432;border-radius:11px;background:#dfe7df;z-index:0}
   .trip-v30-map-status{margin-top:7px;color:#91a293;font-size:7px;line-height:1.5}
   .trip-v30-map-legend{display:flex;flex-wrap:wrap;gap:8px 12px;margin:9px 0 3px}
   .trip-v30-map-legend span{display:inline-flex;align-items:center;gap:5px;color:#9eaea1;font-size:7px}

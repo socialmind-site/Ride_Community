@@ -1,5 +1,5 @@
-const CACHE='ride-v32-standalone-map-renderer-20261124';
-const RELEASE='v32';
+const CACHE='ride-v32-1-map-position-fix-20261124';
+const RELEASE='v32.1';
 const FILES=[
   './',
   './index.html',

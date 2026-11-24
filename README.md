@@ -195,3 +195,10 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - Il disegno iniziale usa subito i punti del catalogo e le soste salvate; il routing stradale viene richiesto in background e aggiorna la geometria appena disponibile.
 - Il file di compatibilità V31 non viene più caricato né precacheato, evitando di sovrascrivere la globale `window.L`.
 - Aggiornata la cache PWA alla V32.
+
+## RIDE V32.1 — Correzione visibilità mappa
+
+- Corretto il contenitore della mappa con `position: relative`, `display: block` e `isolation: isolate`.
+- I livelli SVG, le tile raster, i marker e i controlli assoluti vengono ora posizionati rispetto al riquadro cartografico e non al modal o al viewport.
+- Nessuna modifica ai dati dei viaggi o alle soste.
+- Aggiornata la cache PWA alla V32.1.
