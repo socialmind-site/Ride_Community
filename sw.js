@@ -1,9 +1,10 @@
-const CACHE='ride-v36-2-safety-panel-selector-fix-20261124';
-const RELEASE='v36.2';
+const CACHE='ride-v37-road-safety-map-20261124';
+const RELEASE='v37';
 const FILES=[
   './',
   './index.html',
   './ride-road-safety.js',
+  './ride-road-safety-map.js',
   './routes-catalog.js',
   './europe-routes.js',
   './ride-v26.js',
