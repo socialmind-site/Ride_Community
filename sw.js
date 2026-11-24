@@ -1,5 +1,5 @@
-const CACHE='ride-v37-road-safety-map-20261124';
-const RELEASE='v37';
+const CACHE='ride-v37-1-road-safety-mobile-fix-20261124';
+const RELEASE='v37.1';
 const FILES=[
   './',
   './index.html',
