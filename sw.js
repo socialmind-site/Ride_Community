@@ -1,5 +1,5 @@
-const CACHE='ride-v30-leaflet-place-cards-20261124';
-const RELEASE='v30';
+const CACHE='ride-v30-1-leaflet-place-cards-20261124';
+const RELEASE='v30.1';
 const FILES=[
   './',
   './index.html',

@@ -173,3 +173,4 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - Ricerca POI ottimizzata: campionamento adattivo del percorso, una query compatta per categoria, due server Overpass interrogati in parallelo, timeout e riuso locale dei risultati per 12 minuti.
 - I risultati conservano tag e identificativi OSM per caricare ulteriori dettagli quando l'utente apre una scheda. Le informazioni possono essere incomplete o non aggiornate; verificare direttamente con l'attività.
 - I dati del viaggio restano locali. Mappa e ricerca richiedono connessione Internet; i tile OpenStreetMap sono attribuiti correttamente.
+- RIDE V30.1: aggiunti i pulsanti “Vedi scheda” anche ai marker della mappa e visualizzazione dei punteggi/classificazioni OSM quando effettivamente disponibili nei dati.
