@@ -50,3 +50,13 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - Statistiche personali: chilometri dei ricordi collegati a itinerari, spesa carburante, spesa manutenzione, litri registrati e consumo medio.
 - Tutti i nuovi dati sono salvati localmente e inclusi nel backup JSON. Non è stato aggiunto alcun backend.
 - Le stime di meteo e altimetria dipendono da servizi pubblici esterni; le statistiche dipendono dall'accuratezza dei dati inseriti dall'utente.
+
+
+## RIDE V19 — Modalità guida GPS locale
+
+- Modalità guida in primo piano con geolocalizzazione del browser, velocità attuale e massima, distanza GPS accumulata e durata della sessione.
+- La posizione del dispositivo viene visualizzata sulla mappa locale; il tracciamento non viene condiviso con altri utenti e si interrompe quando si esce dalla modalità o si chiude la pagina.
+- Confronto della posizione con la geometria del percorso: avviso di allontanamento dal tracciato dopo più rilevazioni consecutive oltre la soglia indicativa di 180 m.
+- Indicazione successiva disponibile per gli itinerari calcolati con Valhalla; le istruzioni vocali sono opzionali e richiedono supporto speechSynthesis del browser.
+- Le sessioni concluse vengono salvate localmente con traccia GPS semplificata, distanza, durata e velocità media/massima; possono essere esportate in GPX e sono incluse nel backup JSON.
+- Il GPS funziona solo con permesso esplicito e mentre la pagina è attiva. Non è un navigatore certificato, non esegue rerouting automatico e non garantisce tracking in background. Seguire sempre segnaletica e norme stradali.
