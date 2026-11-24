@@ -2172,7 +2172,7 @@ function localNotifications(){
   if(status.className==='ok')return;
   items.push({kind:'maintenance',priority:status.className==='overdue'?0:1,title:entry.type+' · '+status.label,body:entry.nextDate?'Scadenza '+formatDiaryDate(entry.nextDate):entry.nextKm?'Prossimo controllo a '+Number(entry.nextKm).toLocaleString('it-IT')+' km':'Controlla il registro manutenzione.',action:'profile',label:'Apri garage'});
  });
- (state.tripPlans||[]).forEach(trip=>(trip.days||[]).forEach(day=>{const date=day.date;if(!date||date<localDateString()||date>localDateString(datePlusDays(14)))return;const route=routes.find(r=>r.id===day.routeId);items.push({kind:'trip',priority:2,date:new Date(date+'T'+(day.time||'09:00')+':00'),title:'Viaggio: '+trip.title,body:formatDiaryDate(date)+' · '+(route?.name||'Itinerario da definire'),action:'trips',label:'Apri viaggio'})}));
+ (state.tripPlans||[]).forEach(trip=>(trip.days||[]).forEach(day=>{const date=day.date;if(!date||date<localDateString()||date>datePlusDays(14))return;const route=routes.find(r=>r.id===day.routeId);items.push({kind:'trip',priority:2,date:new Date(date+'T'+(day.time||'09:00')+':00'),title:'Viaggio: '+trip.title,body:formatDiaryDate(date)+' · '+(route?.name||'Itinerario da definire'),action:'trips',label:'Apri viaggio'})}));
  (state.myRides||[]).forEach(ride=>{
   if(!ride.date)return;
   const date=new Date(String(ride.date).slice(0,10)+'T'+(ride.time||'09:00')+':00');
