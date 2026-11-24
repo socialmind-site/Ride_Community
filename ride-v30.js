@@ -387,12 +387,22 @@
       activeMap={tripId,map,layers:L.layerGroup().addTo(map),dayData:[],filter:'all'};
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors',subdomains:'abc'}).addTo(map);
       map.setView([45.8,10.8],6);
-      setMapStatus(tripId,'Calcolo dei percorsi e ordinamento delle soste…');
-      const dayData=await buildMapData(trip,token);if(token!==mapToken||!canvas.isConnected)return;
-      activeMap.dayData=dayData;currentMapData();
-      const approximate=dayData.filter(d=>d.approximate).length;
-      setMapStatus(tripId,approximate?'Mappa pronta. '+approximate+' giornata/e usano un tracciato indicativo.':'Mappa pronta · percorsi stradali e soste caricati.');
-      requestAnimationFrame(()=>requestAnimationFrame(()=>{if(activeMap?.map===map){map.invalidateSize();currentMapData()}}));
+      const initialDays=[...(trip.days||[])].sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+      activeMap.dayData=initialDays.map((day,dayIndex)=>{
+        const route=routes.find(r=>String(r.id)===String(day.routeId)),points=route?routePoints(route):[];
+        return{day,dayIndex,route,points,approximate:true,stops:sortStops(day,points)};
+      });
+      currentMapData();
+      setMapStatus(tripId,'Mappa aperta. Sto aggiornando il dettaglio stradale in background…');
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{if(activeMap?.map===map)map.invalidateSize()}));
+      buildMapData(trip,token).then(dayData=>{
+        if(token!==mapToken||!canvas.isConnected||activeMap?.map!==map)return;
+        activeMap.dayData=dayData;currentMapData();
+        const approximate=dayData.filter(d=>d.approximate).length;
+        setMapStatus(tripId,approximate?'Mappa pronta. '+approximate+' giornata/e usano un tracciato indicativo.':'Mappa pronta · percorsi stradali e soste caricati.');
+      }).catch(error=>{
+        if(token===mapToken&&activeMap?.map===map)setMapStatus(tripId,'Mappa pronta con il tracciato indicativo; il routing stradale non è disponibile.');
+      });
     }catch(error){
       if(token!==mapToken)return;
       cleanupMap();wrap.hidden=false;button.textContent='Riprova ad aprire la mappa';

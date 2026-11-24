@@ -184,3 +184,4 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - Aggiunti controlli zoom, centratura e trascinamento touch/puntatore.
 - La scheda del viaggio non dipende più dalla disponibilità di CDN JavaScript per il motore cartografico.
 - Aggiornata la cache PWA alla V31.
+- RIDE V31.1: la mappa disegna immediatamente punti e soste salvate; il routing stradale dettagliato viene caricato in background e sostituisce il tracciato indicativo appena disponibile.
