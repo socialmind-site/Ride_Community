@@ -1,5 +1,5 @@
-const CACHE='ride-v36-road-safety-community-20261124';
-const RELEASE='v36';
+const CACHE='ride-v36-1-safety-init-fix-20261124';
+const RELEASE='v36.1';
 const FILES=[
   './',
   './index.html',
