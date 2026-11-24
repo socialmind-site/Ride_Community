@@ -1,5 +1,5 @@
-const CACHE='ride-v23-trip-exports-20261124';
-const RELEASE='v23';
+const CACHE='ride-v24-weather-reroute-checklist-20261124';
+const RELEASE='v24';
 const FILES=[
   './',
   './index.html',
