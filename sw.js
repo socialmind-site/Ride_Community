@@ -1,5 +1,5 @@
-const CACHE='ride-v22-route-comparison-20261124';
-const RELEASE='v22';
+const CACHE='ride-v23-trip-exports-20261124';
+const RELEASE='v23';
 const FILES=[
   './',
   './index.html',
