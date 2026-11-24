@@ -1,5 +1,5 @@
-const CACHE='ride-v37-7-clustering-filters-20261124';
-const RELEASE='v37.7';
+const CACHE='ride-v37-8-confidence-signals-20261124';
+const RELEASE='v37.8';
 const FILES=[
   './',
   './index.html',
