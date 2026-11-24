@@ -1,5 +1,5 @@
-const CACHE='ride-v37-8-confidence-signals-20261124';
-const RELEASE='v37.8';
+const CACHE='ride-v37-9-proximity-alerts-20261124';
+const RELEASE='v37.9';
 const FILES=[
   './',
   './index.html',
