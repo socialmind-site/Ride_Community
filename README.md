@@ -39,3 +39,14 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - Gli itinerari calcolati vengono conservati nella libreria personale e possono essere esportati in GPX.
 - Le indicazioni sono supporto alla pianificazione, non navigazione turn-by-turn live. Controllare sempre segnaletica, divieti e accessi.
 - I geocoder e il server Valhalla sono servizi pubblici esterni: possono applicare limiti, essere temporaneamente indisponibili o cambiare condizioni. Per un servizio commerciale stabile servirà un provider con SLA o un'infrastruttura dedicata.
+
+
+## RIDE V18 — Route Intelligence e Garage
+
+- Meteo orario lungo l'itinerario: selezione di data e ora di partenza; condizioni stimate a partenza, punto intermedio e arrivo usando il tempo di percorrenza stimato, con temperatura, probabilità e quantità di precipitazioni, vento, raffiche e visibilità.
+- Profilo altimetrico: campionamento del tracciato fino a 90 coordinate tramite Open-Meteo Elevation API / Copernicus DEM GLO-90; stima di salita, discesa e quota massima. Le tracce GPX con quote valide usano i dati inclusi nel file.
+- Analisi curve: indice indicativo di variazioni di direzione per 100 km, derivato dalla geometria della strada. Non è una classificazione ufficiale di difficoltà o sicurezza.
+- Registro carburante: data, chilometraggio, litri, costo, distributore, pieno/parziale e note. Il consumo medio viene calcolato tra due pieni consecutivi e include eventuali rifornimenti parziali intermedi.
+- Statistiche personali: chilometri dei ricordi collegati a itinerari, spesa carburante, spesa manutenzione, litri registrati e consumo medio.
+- Tutti i nuovi dati sono salvati localmente e inclusi nel backup JSON. Non è stato aggiunto alcun backend.
+- Le stime di meteo e altimetria dipendono da servizi pubblici esterni; le statistiche dipendono dall'accuratezza dei dati inseriti dall'utente.
