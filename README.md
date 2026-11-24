@@ -146,3 +146,11 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - L'elenco sottostante riporta lo stesso ordine delle soste. La mappa si aggiorna dopo aggiunte e rimozioni senza perdere il filtro attivo.
 - Se il routing stradale non è disponibile, la mappa usa i punti noti del catalogo come geometria approssimativa e lo segnala. La proiezione e l'ordine sono indicativi in questo caso.
 - La cartografia richiede connessione Internet; i dati del viaggio restano locali.
+
+## RIDE V29 — Stabilità mappa del viaggio
+
+- Inizializzazione della mappa interattiva resa a istanza singola: le mutazioni del dettaglio non possono avviare più mappe concorrenti.
+- La mappa viene inizializzata solo dopo che il contenuto del dettaglio viaggio è pronto e il contenitore è presente nel layout.
+- Resize e adattamento del tracciato vengono eseguiti dopo il rendering del modal, evitando inizializzazioni su contenitori ancora nascosti o a dimensione zero.
+- Gli errori di caricamento cartografico non interrompono il dettaglio del viaggio: l'elenco delle soste resta disponibile e viene mostrato un messaggio di fallback.
+- Aggiornata la cache PWA alla V29.

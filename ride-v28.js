@@ -46,6 +46,7 @@
   }`;
 
   let activeMap=null;
+  let pendingTripId=null;
   let mapToken=0;
   let observer=null;
 
@@ -217,24 +218,36 @@
     const canvas=document.getElementById('trip-v28-map-'+trip.id);
     if(!panel||!canvas||!canvas.isConnected)return;
     if(activeMap&&String(activeMap.tripId)===String(trip.id)&&activeMap.map){refreshMapFromState(trip.id);return}
+    if(pendingTripId===String(trip.id))return;
     cleanupMap();
     const token=mapToken;
+    pendingTripId=String(trip.id);
+    let map=null;
     const days=(trip.days||[]).length;
-    if(!days){setStatus(trip.id,'Aggiungi una giornata per visualizzare il percorso sulla mappa.');return}
-    setStatus(trip.id,'Caricamento mappa e tracciati giornalieri…');
     try{
+      if(!days){setStatus(trip.id,'Aggiungi una giornata per visualizzare il percorso sulla mappa.');return}
+      setStatus(trip.id,'Caricamento mappa e tracciati giornalieri…');
       if(typeof loadMapLibre!=='function')throw new Error('Il motore cartografico non è disponibile.');
       const lib=await loadMapLibre();
       if(token!==mapToken||!canvas.isConnected)return;
-      const map=new lib.Map({container:canvas,style:'https://tiles.openfreemap.org/styles/liberty',center:[10.8,45.8],zoom:6,cooperativeGestures:true,attributionControl:true});
+      map=new lib.Map({container:canvas,style:'https://tiles.openfreemap.org/styles/liberty',center:[10.8,45.8],zoom:6,cooperativeGestures:true,attributionControl:true});
       activeMap={tripId:trip.id,map,lib,dayData:[],filter:'all'};
-      if(lib.NavigationControl)map.addControl(new lib.NavigationControl({showCompass:false}), 'top-right');
+      if(lib.NavigationControl)map.addControl(new lib.NavigationControl({showCompass:false}),'top-right');
       await new Promise((resolve,reject)=>{
-        const timeout=setTimeout(()=>reject(new Error('Tempo massimo di caricamento della mappa superato.')),18000);
-        map.once('load',()=>{clearTimeout(timeout);resolve()});
-        map.once('error',event=>{if(!map.isStyleLoaded()){clearTimeout(timeout);reject(event.error||new Error('Mappa non disponibile.'))}});
+        let settled=false;
+        const finish=(error)=>{
+          if(settled)return;
+          settled=true;clearTimeout(timeout);
+          if(error)reject(error);else resolve();
+        };
+        const timeout=setTimeout(()=>finish(new Error('Tempo massimo di caricamento della mappa superato.')),22000);
+        map.once('load',()=>finish());
+        map.once('remove',()=>finish(new Error('La mappa è stata chiusa durante il caricamento.')));
       });
-      if(token!==mapToken||!canvas.isConnected){cleanupMap();return}
+      if(token!==mapToken||!canvas.isConnected){
+        if(activeMap?.map===map){try{map.remove()}catch(error){}activeMap=null}
+        return;
+      }
       map.addSource('trip-v28-routes',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
       map.addLayer({id:'trip-v28-route-line',type:'line',source:'trip-v28-routes',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':['match',['get','dayIndex'],0,'#b8f52e',1,'#57c6ff',2,'#e58bd1',3,'#ffc94d',4,'#b79aff',5,'#61d5b5','#b8f52e'],'line-width':4,'line-opacity':['case',['==',['get','approximate'],1],.55,.92]}});
       map.addSource('trip-v28-terminals',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
@@ -259,17 +272,24 @@
       updateOrderPanel(trip.id,dayData,'all');
       const approximate=dayData.filter(item=>item.approximate&&item.points.length>1).length;
       setStatus(trip.id,approximate?'Mappa pronta. '+approximate+' tracciato/i mostrati in forma indicativa perché il routing stradale non ha risposto.':'Mappa pronta · le soste sono numerate nell’ordine del percorso.');
-      map.resize();
-      setTimeout(()=>{if(activeMap?.map===map&&map.isStyleLoaded())map.resize()},180);
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        if(activeMap?.map!==map||!map.isStyleLoaded())return;
+        map.resize();
+        const bounds=canvas.getBoundingClientRect();
+        if(bounds.width>0&&bounds.height>0)fitMap(map,buildMapData(dayData,'all').allCoords);
+      }));
     }catch(error){
       if(token!==mapToken)return;
-      setStatus(trip.id,'Non riesco a caricare la mappa interattiva. Puoi comunque usare l’elenco delle soste e aprire ogni punto su Google Maps.');
+      if(activeMap?.map===map){try{map.remove()}catch(removeError){}activeMap=null}
+      setStatus(trip.id,'Mappa non disponibile in questo momento. Le soste e il loro ordine restano consultabili qui sotto.');
       const order=document.querySelector('[data-v28-order-list="'+CSS.escape(String(trip.id))+'"]');
       if(order){
         const current=currentTrip(trip.id);
-        const fallback=(current?.days||[]).flatMap((day,index)=>(day.stopSelections||[]).map((stop,n)=>({stop,day,index,n})));
+        const fallback=(current?.days||[]).flatMap((day,index)=>sortDayStops(day,routePointsFromStops((routes||[]).find(route=>String(route.id)===String(day.routeId)))).map((stop,n)=>({stop,day,index,n})));
         order.innerHTML=fallback.length?fallback.map(item=>'<article class="trip-v28-order-item"><span class="trip-v28-order-number">'+(item.index+1)+'.'+(item.n+1)+'</span><span class="trip-v28-order-copy"><strong>'+esc(item.stop.name)+'</strong><small>'+esc(categoryLabel(item.stop.category))+' · '+esc(formatDiaryDate(item.day.date))+'</small></span><span class="trip-v28-order-actions"><a href="'+googleMapsUrl(item.stop)+'" target="_blank" rel="noopener noreferrer">Apri Maps ↗</a></span></article>').join(''):'<div class="trip-v28-order-empty">Nessuna sosta selezionata.</div>';
       }
+    }finally{
+      if(pendingTripId===String(trip.id))pendingTripId=null;
     }
   }
   function ensureMapPanel(){
@@ -278,15 +298,15 @@
     const tripId=modal.querySelector('[data-action="delete-trip"]')?.dataset.tripId;
     const trip=currentTrip(tripId);
     const summary=modal.querySelector('.trip-detail-summary');
-    if(!trip||!summary)return;
+    const content=modal.querySelector('[data-v26-trip-content]');
+    if(!trip||!summary||!content)return;
     let panel=modal.querySelector('[data-v28-map-panel]');
     if(!panel){
       summary.insertAdjacentHTML('afterend',mapMarkup(trip));
       panel=modal.querySelector('[data-v28-map-panel]');
     }
-    const content=modal.querySelector('[data-v26-trip-content]');
     if(panel&&content&&panel.nextElementSibling!==content)content.before(panel);
-    if(!activeMap||String(activeMap.tripId)!==String(trip.id))initTripMap(trip);
+    if(panel&&(!activeMap||String(activeMap.tripId)!==String(trip.id))&&pendingTripId!==String(trip.id))initTripMap(trip);
   }
   function injectStyles(){
     if(document.getElementById('ride-v28-style'))return;
@@ -294,12 +314,19 @@
   }
   function start(){
     injectStyles();
-    ensureMapPanel();
-    observer=new MutationObserver(()=>{
-      const modal=document.querySelector('#modal-root .modal');
-      if(!modal){if(activeMap)cleanupMap();return}
-      ensureMapPanel();
-    });
+    let scheduled=false;
+    const scheduleEnsure=()=>{
+      if(scheduled)return;
+      scheduled=true;
+      requestAnimationFrame(()=>{
+        scheduled=false;
+        const modal=document.querySelector('#modal-root .modal');
+        if(!modal){if(activeMap)cleanupMap();return}
+        ensureMapPanel();
+      });
+    };
+    scheduleEnsure();
+    observer=new MutationObserver(scheduleEnsure);
     observer.observe(document.body,{childList:true,subtree:true});
     document.addEventListener('click',event=>{
       const filter=event.target.closest('[data-v28-trip-map-filter]');
