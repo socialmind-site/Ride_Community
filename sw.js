@@ -1,5 +1,5 @@
-const CACHE='ride-v37-5-single-safety-load-20261124';
-const RELEASE='v37.5';
+const CACHE='ride-v37-6-custom-report-icons-popup-20261124';
+const RELEASE='v37.6';
 const FILES=[
   './',
   './index.html',
