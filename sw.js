@@ -1,5 +1,5 @@
-const CACHE='ride-v31-2-native-raster-map-marker-fix-20261124';
-const RELEASE='v31.2';
+const CACHE='ride-v32-standalone-map-renderer-20261124';
+const RELEASE='v32';
 const FILES=[
   './',
   './index.html',
@@ -7,7 +7,7 @@ const FILES=[
   './europe-routes.js',
   './ride-v26.js',
   './ride-v30.js',
-  './ride-v31.js',
+  './ride-v32.js',
   './manifest.webmanifest',
   './icon.svg',
   './assets/garda-road.webp',

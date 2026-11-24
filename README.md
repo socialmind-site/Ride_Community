@@ -186,3 +186,12 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - Aggiornata la cache PWA alla V31.
 - RIDE V31.1: la mappa disegna immediatamente punti e soste salvate; il routing stradale dettagliato viene caricato in background e sostituisce il tracciato indicativo appena disponibile.
 - RIDE V31.2: corretta la proiezione dei marker di partenza/arrivo e reso il calcolo dei limiti della mappa sicuro anche con tracce GPS molto dense.
+
+## RIDE V32 — Motore cartografico standalone
+
+- Il renderer della mappa è stato separato dal vecchio adattatore Leaflet/MapLibre: non usa librerie cartografiche, globali compatibili o WebGL.
+- Il pianificatore delega apertura mappa e filtri al renderer V32; il vecchio percorso di apertura Leaflet resta solo come fallback non utilizzato quando V32 è disponibile.
+- Cartografia raster OpenStreetMap, tracciati SVG, marker HTML, zoom, centratura e pan touch gestiti direttamente dal modulo.
+- Il disegno iniziale usa subito i punti del catalogo e le soste salvate; il routing stradale viene richiesto in background e aggiorna la geometria appena disponibile.
+- Il file di compatibilità V31 non viene più caricato né precacheato, evitando di sovrascrivere la globale `window.L`.
+- Aggiornata la cache PWA alla V32.

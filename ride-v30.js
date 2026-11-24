@@ -453,9 +453,9 @@
       const card=event.target.closest('[data-v30-place-card]');
       if(card){event.preventDefault();event.stopImmediatePropagation();showPlaceCard(card.dataset.v30DayId,card.dataset.v30Category,card.dataset.v30PoiId);return}
       const open=event.target.closest('[data-v30-open-map]');
-      if(open){event.preventDefault();event.stopImmediatePropagation();openTripMap(open.dataset.v30OpenMap);return}
+      if(open){event.preventDefault();event.stopImmediatePropagation();if(window.RIDE_V32?.openTripMap)window.RIDE_V32.openTripMap(open.dataset.v30OpenMap);else openTripMap(open.dataset.v30OpenMap);return}
       const filter=event.target.closest('[data-v30-map-filter]');
-      if(filter){event.preventDefault();event.stopImmediatePropagation();if(activeMap&&String(activeMap.tripId)===String(filter.dataset.tripId)){activeMap.filter=filter.dataset.v30MapFilter;currentMapData()}return}
+      if(filter){event.preventDefault();event.stopImmediatePropagation();if(window.RIDE_V32?.setFilter)window.RIDE_V32.setFilter(filter.dataset.tripId,filter.dataset.v30MapFilter);else if(activeMap&&String(activeMap.tripId)===String(filter.dataset.tripId)){activeMap.filter=filter.dataset.v30MapFilter;currentMapData()}return}
     },true);
     document.addEventListener('click',event=>{
       const add=event.target.closest('[data-v26-add-stop]');
