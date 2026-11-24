@@ -65,7 +65,14 @@
 .map-rider-marker{pointer-events:all;cursor:pointer;filter:drop-shadow(0 3px 7px #000b);transition:filter .15s}
 .map-rider-marker:hover{filter:drop-shadow(0 0 9px #b8f52e)}
 .rs-road-report-marker{pointer-events:all;cursor:pointer;filter:drop-shadow(0 3px 7px #000b)}
+
+.rs-map-pin{position:relative;width:42px;height:42px;display:grid;place-items:center;padding:0;border:2px solid #f7faf4;border-radius:50%;background:var(--rs-pin-color,#94a3b8);color:#fff;box-shadow:0 4px 15px #000b;cursor:pointer;outline:none}
+.rs-map-pin:after{content:"";position:absolute;left:50%;bottom:-5px;width:10px;height:10px;transform:translateX(-50%) rotate(45deg);background:var(--rs-pin-color,#94a3b8);border-right:1.5px solid #fff;border-bottom:1.5px solid #fff;border-radius:0 0 2px 0;z-index:-1}
+.rs-map-pin svg{width:21px;height:21px;display:block}
+.rs-map-pin:focus-visible{outline:3px solid #fff;outline-offset:4px}
+.rs-road-report-marker{pointer-events:all;cursor:pointer;filter:drop-shadow(0 3px 7px #000b)}
 .rs-road-report-marker:focus circle{stroke:#b8f52e;stroke-width:4}
+
 .map-stop-marker{pointer-events:none;filter:drop-shadow(0 2px 4px #000a)}
 .map-attribution{position:absolute;z-index:510;right:11px;bottom:66px;padding:4px 7px;border-radius:7px;background:#071013b8;color:#d0dad6;font-size:7px;letter-spacing:.1px;backdrop-filter:blur(8px);pointer-events:none}
 .map-wrap.fallback-active #main-map{visibility:hidden}
@@ -2996,7 +3003,7 @@ let mapLibrePromise=null,mapInitToken=0;
 function loadMapLibre(){if(!mapLibrePromise)mapLibrePromise=import('https://unpkg.com/maplibre-gl@6.19.0/dist/maplibre-gl.mjs').then(m=>m.default||m).catch(e=>{mapLibrePromise=null;throw e});return mapLibrePromise}
 function routePointAt(points,p){if(!points?.length)return null;let total=0,ds=[];for(let i=0;i<points.length-1;i++){const a=points[i],b=points[i+1],r=Math.PI/180,dy=(b[0]-a[0])*r,dx=(b[1]-a[1])*r,h=Math.sin(dy/2)**2+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(dx/2)**2,d=6371*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));ds.push(d);total+=d}let t=Math.max(0,Math.min(1,p))*total;for(let i=0;i<ds.length;i++){if(t<=ds[i]||i===ds.length-1){const a=points[i],b=points[i+1],f=ds[i]?t/ds[i]:0,r=Math.PI/180,lat=a[0]+(b[0]-a[0])*f,lon=a[1]+(b[1]-a[1])*f,dlon=(b[1]-a[1])*r,y=Math.sin(dlon)*Math.cos(b[0]*r),x=Math.cos(a[0]*r)*Math.sin(b[0]*r)-Math.sin(a[0]*r)*Math.cos(b[0]*r)*Math.cos(dlon);return{lat,lon,bearing:(Math.atan2(y,x)*180/Math.PI+360)%360}}t-=ds[i]}return{lat:points.at(-1)[0],lon:points.at(-1)[1],bearing:0}}
 class RideMapLibre{
-constructor(el,lib){this.lib=lib;this.route=[];this.is3D=false;this.communityMarkers=[];this.communityItems=[];this.cameraHeading=Number.isFinite(state.cameraHeading)?state.cameraHeading:0;this.cameraFollow=state.cameraFollow!==false;this.lastCameraUpdate=0;this.map=new lib.Map({container:el,style:'https://tiles.openfreemap.org/styles/liberty',center:[state.center.lon,state.center.lat],zoom:state.zoom||9,pitch:0,maxPitch:80,cooperativeGestures:true});this.ready=new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('Map load timeout')),15000);this.map.once('load',()=>{clearTimeout(timer);try{this.setup();resolve(this)}catch(e){reject(e)}})});this.resizeObserver=new ResizeObserver(()=>this.map.resize());this.resizeObserver.observe(el)}
+constructor(el,lib){this.lib=lib;this.route=[];this.is3D=false;this.communityMarkers=[];this.communityItems=[];this.roadSafetyMarkers=new Map();this.cameraHeading=Number.isFinite(state.cameraHeading)?state.cameraHeading:0;this.cameraFollow=state.cameraFollow!==false;this.lastCameraUpdate=0;this.map=new lib.Map({container:el,style:'https://tiles.openfreemap.org/styles/liberty',center:[state.center.lon,state.center.lat],zoom:state.zoom||9,pitch:0,maxPitch:80,cooperativeGestures:true});this.ready=new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('Map load timeout')),15000);this.map.once('load',()=>{clearTimeout(timer);try{this.setup();resolve(this)}catch(e){reject(e)}})});this.resizeObserver=new ResizeObserver(()=>this.map.resize());this.resizeObserver.observe(el)}
 setup(){const m=this.map;m.addSource('ride-dem',{type:'raster-dem',tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],tileSize:256,maxzoom:15,encoding:'terrarium'});m.setTerrain({source:'ride-dem',exaggeration:1.25});m.addSource('ride-sat',{type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,maxzoom:18,attribution:'Imagery © Esri'});const sym=m.getStyle().layers.find(l=>l.type==='symbol');m.addLayer({id:'ride-sat-layer',type:'raster',source:'ride-sat',layout:{visibility:'none'}},sym?.id);m.addSource('ride-route-3d',{type:'geojson',lineMetrics:true,data:{type:'FeatureCollection',features:[]}});m.addLayer({id:'ride-route-glow',type:'line',source:'ride-route-3d',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#20bfff','line-width':8,'line-blur':1}});m.addLayer({id:'ride-route-core',type:'line',source:'ride-route-3d',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#b8f52e','line-width':3}});m.addSource('ride-stops-3d',{type:'geojson',data:{type:'FeatureCollection',features:[]}});m.addLayer({id:'ride-stops-3d-circles',type:'circle',source:'ride-stops-3d',paint:{'circle-radius':9,'circle-color':'#b8f52e','circle-stroke-color':'#091114','circle-stroke-width':3}});m.addSource('ride-progress-3d',{type:'geojson',data:{type:'FeatureCollection',features:[]}});m.addSource('ride-riders-3d',{type:'geojson',data:{type:'FeatureCollection',features:[]}});m.addLayer({id:'ride-riders-3d-circle',type:'circle',source:'ride-riders-3d',paint:{'circle-radius':15,'circle-color':['match',['get','role'],'Passeggera','#e58bd1','#b8f52e'],'circle-stroke-color':'#071116','circle-stroke-width':3}});m.addLayer({id:'ride-riders-3d-label',type:'symbol',source:'ride-riders-3d',layout:{'text-field':['get','initials'],'text-size':10,'text-allow-overlap':true},paint:{'text-color':'#10190c'}});m.addLayer({id:'ride-progress-3d-dot',type:'circle',source:'ride-progress-3d',paint:{'circle-radius':9,'circle-color':'#b8f52e','circle-stroke-color':'#fff','circle-stroke-width':3}});m.on('moveend',()=>{const c=m.getCenter();state.center={lat:c.lat,lon:c.lng};state.zoom=m.getZoom();if(state.view==='map')refreshCommunityResults()});m.on('rotateend',()=>{this.cameraHeading=((m.getBearing()%360)+360)%360;state.cameraHeading=this.cameraHeading;updateCompassUI(this.cameraHeading);save()})}
 getCenter(){const c=this.map.getCenter();return{lat:c.lat,lng:c.lng}}getZoom(){return this.map.getZoom()}
 setView(ll,z){const a=Array.isArray(ll)?ll:[ll.lat,ll.lon??ll.lng];this.map.jumpTo({center:[a[1],a[0]],zoom:z||this.map.getZoom(),pitch:this.is3D?62:0})}flyTo(ll,z){const a=Array.isArray(ll)?ll:[ll.lat,ll.lon??ll.lng];this.map.flyTo({center:[a[1],a[0]],zoom:z||this.map.getZoom(),duration:900})}
@@ -3005,26 +3012,31 @@ setLayer(id){this.layer=id;this.map.setLayoutProperty('ride-sat-layer','visibili
 setRoute(route,stops){this.route=route||[];this.map.getSource('ride-route-3d')?.setData({type:'FeatureCollection',features:this.route.length>1?[{type:'Feature',properties:{},geometry:{type:'LineString',coordinates:this.route.map(p=>[p[1],p[0]])}}]:[]});this.map.getSource('ride-stops-3d')?.setData({type:'FeatureCollection',features:(stops||[]).map(p=>({type:'Feature',properties:{},geometry:{type:'Point',coordinates:[p[2],p[1]]}}))})}
 setPeople(people){this.map.getSource('ride-riders-3d')?.setData({type:'FeatureCollection',features:(people||[]).map(p=>({type:'Feature',properties:{id:p.id,name:p.name,city:p.city,role:p.role,initials:p.initials},geometry:{type:'Point',coordinates:[p.lon,p.lat]}}))})}
 setRoadSafetyReports(reports){
- const features=(Array.isArray(reports)?reports:[]).filter(r=>Number.isFinite(Number(r.latitude))&&Number.isFinite(Number(r.longitude))&&Math.abs(Number(r.latitude))<=90&&Math.abs(Number(r.longitude))<=180).map(r=>({type:'Feature',properties:{id:String(r.id),category:String(r.category||'other')},geometry:{type:'Point',coordinates:[Number(r.longitude),Number(r.latitude)]}}));
- try{
-  if(!this.map.getSource('ride-road-reports'))this.map.addSource('ride-road-reports',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
-  if(!this.map.getLayer('ride-road-reports'))this.map.addLayer({id:'ride-road-reports',type:'circle',source:'ride-road-reports',paint:{
-   'circle-radius':['interpolate',['linear'],['zoom'],5,7,10,10,15,13],
-   'circle-color':['match',['get','category'],'hazard','#ef4444','accident','#e11d48','roadworks','#f59e0b','closed','#64748b','gravel','#b7794c','damaged_road','#eab308','weather','#38bdf8','traffic','#a78bfa','#94a3b8'],
-   'circle-stroke-color':'#ffffff','circle-stroke-width':2,'circle-opacity':0.96
-  }});
-  if(!this.roadSafetyClickBound){
-   this.map.on('click','ride-road-reports',event=>{
-    const id=event.features?.[0]?.properties?.id;
-    if(id)window.RIDE_ROAD_SAFETY?.openMapReport?.(String(id));
-   });
-   this.map.on('mouseenter','ride-road-reports',()=>{this.map.getCanvas().style.cursor='pointer'});
-   this.map.on('mouseleave','ride-road-reports',()=>{this.map.getCanvas().style.cursor=''});
-   this.roadSafetyClickBound=true;
-  }
-  this.map.getSource('ride-road-reports')?.setData({type:'FeatureCollection',features});
- }catch(error){console.warn('RIDE road safety layer unavailable',error)}
+ const valid=(Array.isArray(reports)?reports:[]).filter(r=>Number.isFinite(Number(r.latitude))&&Number.isFinite(Number(r.longitude))&&Math.abs(Number(r.latitude))<=90&&Math.abs(Number(r.longitude))<=180);
+ const keep=new Set();
+ valid.forEach(report=>{
+  const id=String(report.id),visual=roadReportVisual(report),signature=visual.iconKey+'|'+String(report.title||'');
+  keep.add(id);
+  const current=this.roadSafetyMarkers.get(id);
+  if(current&&current.signature===signature)return;
+  if(current)current.marker.remove();
+  const element=document.createElement('button');
+  element.type='button';element.className='rs-map-pin';element.style.setProperty('--rs-pin-color',visual.color);
+  element.innerHTML=visual.svg;
+  element.setAttribute('aria-label',visual.label+': '+String(report.title||'Segnalazione'));
+  element.title=visual.label+' · '+String(report.title||'Segnalazione');
+  element.addEventListener('click',event=>{
+   event.preventDefault();event.stopPropagation();
+   window.RIDE_ROAD_SAFETY?.openMapReport?.(id);
+  });
+  const marker=new this.lib.Marker({element,anchor:'bottom',offset:[0,-5]}).setLngLat([Number(report.longitude),Number(report.latitude)]).addTo(this.map);
+  this.roadSafetyMarkers.set(id,{marker,signature});
+ });
+ this.roadSafetyMarkers.forEach((entry,id)=>{
+  if(!keep.has(id)){entry.marker.remove();this.roadSafetyMarkers.delete(id)}
+ });
 }
+
 setCommunityItems(items){
  this.communityItems=items||[];
  (this.communityMarkers||[]).forEach(marker=>marker.remove());
@@ -3049,11 +3061,11 @@ setRadius(){ }
 setProgress(p){const q=routePointAt(this.route,p);this.progress=Math.max(0,Math.min(1,p));const line=this.map.getLayer('ride-route-core');if(line){const stop=Math.max(0.001,this.progress);this.map.setPaintProperty('ride-route-core','line-gradient',['step',['line-progress'],'#b8f52e',stop,'#20bfff'])}if(!q)return;this.map.getSource('ride-progress-3d')?.setData({type:'FeatureCollection',features:[{type:'Feature',properties:{},geometry:{type:'Point',coordinates:[q.lon,q.lat]}}]});if(this.is3D&&this.cameraFollow&&performance.now()-this.lastCameraUpdate>650){this.lastCameraUpdate=performance.now();this.map.easeTo({center:[q.lon,q.lat],bearing:this.cameraHeading,pitch:64,zoom:Math.max(12.2,this.map.getZoom()),duration:620,essential:true})}}
 fitRoute(points){if(!points?.length)return;const b=new this.lib.LngLatBounds([Math.min(...points.map(p=>p[1])),Math.min(...points.map(p=>p[0]))],[Math.max(...points.map(p=>p[1])),Math.max(...points.map(p=>p[0]))]);this.map.fitBounds(b,{padding:65,duration:900,maxZoom:12})}
 setCameraHeading(degrees){this.cameraHeading=((Number(degrees)%360)+360)%360;state.cameraHeading=this.cameraHeading;const q=routePointAt(this.route,this.progress||0);const options={bearing:this.cameraHeading,duration:650,essential:true};if(this.is3D&&this.cameraFollow&&q){options.center=[q.lon,q.lat];options.pitch=64}this.map.easeTo(options);return this.cameraHeading}setCameraFollow(value){this.cameraFollow=typeof value==='boolean'?value:!this.cameraFollow;state.cameraFollow=this.cameraFollow;if(this.cameraFollow&&this.is3D)this.setProgress(this.progress||0);return this.cameraFollow}toggle3D(){this.is3D=!this.is3D;const q=routePointAt(this.route,this.progress||0);const options={pitch:this.is3D?64:0,zoom:this.is3D?Math.max(12,this.map.getZoom()):this.map.getZoom(),bearing:this.cameraHeading,duration:900,essential:true};if(this.is3D&&this.cameraFollow&&q)options.center=[q.lon,q.lat];this.map.easeTo(options);return this.is3D}
-remove(){(this.communityMarkers||[]).forEach(marker=>marker.remove());this.activeCommunityPopup?.remove();this.resizeObserver?.disconnect();this.map.remove()}
+remove(){(this.communityMarkers||[]).forEach(marker=>marker.remove());(this.roadSafetyMarkers||new Map()).forEach(entry=>entry.marker.remove());this.roadSafetyMarkers?.clear();this.activeCommunityPopup?.remove();this.resizeObserver?.disconnect();this.map.remove()}
 }
 class RideTileMap{
  constructor(el){this.el=el;this.wrap=el.closest('.map-wrap');this.center={lat:state.center.lat,lon:state.center.lon};this.zoom=state.view==='home'||state.view==='map'?9:10;this.layer=state.mapLayer||'satellite';this.cache=new Map();this.loaded=0;this.failed=0;this.route=[];this.stops=[];this.people=[];this.roadSafetyReports=[];this.showEvent=false;this.progress=0;this.drag=null;this.fallbackShown=false;this.layerToken=0;el.innerHTML=`<div class="tile-map-viewport"><div class="tile-base-layer"></div><div class="tile-label-layer"></div><svg class="map-overlay" aria-label="Percorso e marcatori"></svg></div>`;this.viewport=el.querySelector('.tile-map-viewport');this.base=el.querySelector('.tile-base-layer');this.labels=el.querySelector('.tile-label-layer');this.overlay=el.querySelector('.map-overlay');this.bind();this.renderTiles();this.startWatchdog();this.resizeObserver=typeof ResizeObserver!=='undefined'?new ResizeObserver(()=>this.renderTiles()):null;this.resizeObserver?.observe(el)}
- bind(){this.pointers=new Map();this.drag=null;this.pinch=null;this.viewport.addEventListener('pointerdown',e=>{if(e.target.closest('[data-person-id]'))return;this.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});this.viewport.setPointerCapture(e.pointerId);if(this.pointers.size===2){const pts=[...this.pointers.values()],mid={x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2},dx=pts[0].x-pts[1].x,dy=pts[0].y-pts[1].y;this.pinch={distance:Math.max(1,Math.hypot(dx,dy)),zoom:this.zoom,anchor:this.geoAtScreen(mid.x-this.el.getBoundingClientRect().left,mid.y-this.el.getBoundingClientRect().top)};this.drag=null}else if(this.pointers.size===1){this.drag={x:e.clientX,y:e.clientY,center:{...this.center}}}this.viewport.classList.add('dragging')});this.viewport.addEventListener('pointermove',e=>{if(!this.pointers.has(e.pointerId))return;this.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(this.pinch&&this.pointers.size>=2){const pts=[...this.pointers.values()],mid={x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2},dx=pts[0].x-pts[1].x,dy=pts[0].y-pts[1].y,dist=Math.max(1,Math.hypot(dx,dy)),z=Math.max(5,Math.min(17,Math.round(this.pinch.zoom+Math.log2(dist/this.pinch.distance))));if(z!==this.zoom){const rect=this.el.getBoundingClientRect(),offset={x:mid.x-rect.left-this.el.clientWidth/2,y:mid.y-rect.top-this.el.clientHeight/2},anchor=worldPixel(this.pinch.anchor.lat,this.pinch.anchor.lon,z);this.zoom=z;this.center=unprojectWorld(anchor.x-offset.x,anchor.y-offset.y,z);state.center={...this.center};state.zoom=z;this.renderTiles()}return}if(this.drag&&this.pointers.size===1){const dx=e.clientX-this.drag.x,dy=e.clientY-this.drag.y,c=worldPixel(this.drag.center.lat,this.drag.center.lon,this.zoom);this.center=unprojectWorld(c.x-dx,c.y-dy,this.zoom);state.center={...this.center};this.renderTiles()}});const release=e=>{this.pointers.delete(e.pointerId);if(this.pointers.size<2)this.pinch=null;if(this.pointers.size===1){const q=[...this.pointers.values()][0];this.drag={x:q.x,y:q.y,center:{...this.center}}}else if(this.pointers.size===0)this.drag=null;if(!this.pointers.size)this.viewport.classList.remove('dragging')};this.viewport.addEventListener('pointerup',release);this.viewport.addEventListener('pointercancel',release);this.viewport.addEventListener('wheel',e=>{e.preventDefault();this.zoomBy(e.deltaY<0?1:-1)},{passive:false});this.viewport.addEventListener('dblclick',e=>{e.preventDefault();this.zoomIn()});this.overlay.addEventListener('click',e=>{const report=e.target.closest('[data-rs-map-id]');if(report){window.RIDE_ROAD_SAFETY?.openMapReport?.(report.dataset.rsMapId);return}const mark=e.target.closest('[data-person-id]');if(!mark)return;const p=demoPeople.find(x=>String(x.id)===mark.dataset.personId);if(p)toast(`${p.name} · ${p.city} · profilo dimostrativo`)})}
+ bind(){this.pointers=new Map();this.drag=null;this.pinch=null;this.viewport.addEventListener('pointerdown',e=>{if(e.target.closest('[data-person-id]'))return;this.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});this.viewport.setPointerCapture(e.pointerId);if(this.pointers.size===2){const pts=[...this.pointers.values()],mid={x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2},dx=pts[0].x-pts[1].x,dy=pts[0].y-pts[1].y;this.pinch={distance:Math.max(1,Math.hypot(dx,dy)),zoom:this.zoom,anchor:this.geoAtScreen(mid.x-this.el.getBoundingClientRect().left,mid.y-this.el.getBoundingClientRect().top)};this.drag=null}else if(this.pointers.size===1){this.drag={x:e.clientX,y:e.clientY,center:{...this.center}}}this.viewport.classList.add('dragging')});this.viewport.addEventListener('pointermove',e=>{if(!this.pointers.has(e.pointerId))return;this.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(this.pinch&&this.pointers.size>=2){const pts=[...this.pointers.values()],mid={x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2},dx=pts[0].x-pts[1].x,dy=pts[0].y-pts[1].y,dist=Math.max(1,Math.hypot(dx,dy)),z=Math.max(5,Math.min(17,Math.round(this.pinch.zoom+Math.log2(dist/this.pinch.distance))));if(z!==this.zoom){const rect=this.el.getBoundingClientRect(),offset={x:mid.x-rect.left-this.el.clientWidth/2,y:mid.y-rect.top-this.el.clientHeight/2},anchor=worldPixel(this.pinch.anchor.lat,this.pinch.anchor.lon,z);this.zoom=z;this.center=unprojectWorld(anchor.x-offset.x,anchor.y-offset.y,z);state.center={...this.center};state.zoom=z;this.renderTiles()}return}if(this.drag&&this.pointers.size===1){const dx=e.clientX-this.drag.x,dy=e.clientY-this.drag.y,c=worldPixel(this.drag.center.lat,this.drag.center.lon,this.zoom);this.center=unprojectWorld(c.x-dx,c.y-dy,this.zoom);state.center={...this.center};this.renderTiles()}});const release=e=>{this.pointers.delete(e.pointerId);if(this.pointers.size<2)this.pinch=null;if(this.pointers.size===1){const q=[...this.pointers.values()][0];this.drag={x:q.x,y:q.y,center:{...this.center}}}else if(this.pointers.size===0)this.drag=null;if(!this.pointers.size)this.viewport.classList.remove('dragging')};this.viewport.addEventListener('pointerup',release);this.viewport.addEventListener('pointercancel',release);this.viewport.addEventListener('wheel',e=>{e.preventDefault();this.zoomBy(e.deltaY<0?1:-1)},{passive:false});this.viewport.addEventListener('dblclick',e=>{e.preventDefault();this.zoomIn()});this.overlay.addEventListener('click',e=>{const report=e.target.closest('[data-rs-map-id]');if(report){window.RIDE_ROAD_SAFETY?.openMapReport?.(report.dataset.rsMapId);return}const mark=e.target.closest('[data-person-id]');if(!mark)return;const p=demoPeople.find(x=>String(x.id)===mark.dataset.personId);if(p)toast(`${p.name} · ${p.city} · profilo dimostrativo`)});this.overlay.addEventListener('keydown',e=>{const report=e.target.closest('[data-rs-map-id]');if(report&&(e.key==='Enter'||e.key===' ')){e.preventDefault();window.RIDE_ROAD_SAFETY?.openMapReport?.(report.dataset.rsMapId)}})}
  geoAtScreen(x,y){const c=worldPixel(this.center.lat,this.center.lon,this.zoom);return unprojectWorld(c.x+x-this.el.clientWidth/2,c.y+y-this.el.clientHeight/2,this.zoom)}
  getCenter(){return{lat:this.center.lat,lng:this.center.lon}}
  getZoom(){return this.zoom}
@@ -3083,11 +3095,9 @@ setRoadSafetyReports(reports){this.roadSafetyReports=Array.isArray(reports)?repo
  (this.roadSafetyReports||[]).forEach(report=>{
   const lat=Number(report.latitude),lon=Number(report.longitude);
   if(!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)return;
-  const p=this.toScreen(lat,lon);if(p.x<-25||p.x>w+25||p.y<-25||p.y>h+25)return;
-  const colors={hazard:'#ef4444',accident:'#e11d48',roadworks:'#f59e0b',closed:'#64748b',gravel:'#b7794c',damaged_road:'#eab308',weather:'#38bdf8',traffic:'#a78bfa',other:'#94a3b8'};
-  const symbols={hazard:'!',accident:'!',roadworks:'W',closed:'X',gravel:'G',damaged_road:'D',weather:'M',traffic:'T',other:'i'};
-  const color=colors[report.category]||'#94a3b8',symbol=symbols[report.category]||'i';
-  out+='<g class="rs-road-report-marker" data-rs-map-id="'+esc(report.id)+'" role="button" tabindex="0" aria-label="'+esc(labelForMapReport(report.category))+': '+esc(report.title||'Segnalazione')+'" transform="translate('+p.x+','+p.y+')"><title>'+esc(report.title||'Segnalazione')+'</title><circle r="15" fill="'+color+'" stroke="#fff" stroke-width="2.5"/><text y="4" text-anchor="middle" fill="#10190c" font-size="12" font-weight="900">'+symbol+'</text></g>';
+  const p=this.toScreen(lat,lon);if(p.x<-28||p.x>w+28||p.y<-28||p.y>h+28)return;
+  const visual=roadReportVisual(report);
+  out+='<g class="rs-road-report-marker" data-rs-map-id="'+esc(report.id)+'" role="button" tabindex="0" aria-label="'+esc(visual.label)+': '+esc(report.title||'Segnalazione')+'" transform="translate('+p.x+','+p.y+')"><title>'+esc(report.title||visual.label)+'</title><circle r="17" fill="'+visual.color+'" stroke="#fff" stroke-width="2.5"/><g transform="translate(-11,-11)" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+visual.paths+'</g></g>';
  });
  this.overlay.innerHTML=`<defs><filter id="routeGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>${out}`}
  remove(){clearTimeout(this.watchdog);this.resizeObserver?.disconnect();this.viewport?.replaceChildren();this.cache.clear();if(this.wrap)this.wrap.classList.remove('fallback-active')}
@@ -3104,6 +3114,40 @@ async function getRoadGeometry(r){if(routeCache.has(r.id))return routeCache.get(
 function routeLine(r,geometry){clearRouteLayers();routeGeometry=geometry?.latlngs||[];routeReal=!!geometry;if(mapObject){mapObject.setRoute(routeGeometry,r.stops);if(routeReal)mapObject.fitRoute(routeGeometry)}const status=$('#route-status'),slider=$('#route-slider'),play=$('#route-play');if(status)status.textContent=geometry?`Tracciato stradale calcolato · ${geometry.distance} km`:'Tracciato stradale non disponibile · apri il navigatore';if(slider){slider.value='0';slider.disabled=!routeReal}if(play)play.disabled=!routeReal;$$('[data-action="play-route"]').forEach(b=>b.disabled=!routeReal);updateRouteProgress(0)}
 async function selectRouteOnMap(){if(!mapObject)return;const targetMap=mapObject,r=selectedRoute();setMapStatus('Calcolo del percorso sulle strade…');const geometry=await getRoadGeometry(r);if(mapObject!==targetMap)return;routeLine(r,geometry);setMapStatus('',false);if(geometry){loadRouteElevation(r,geometry);if(state.view==='ride')updateRideModeUI();const stats=$$('.route-stats .stat strong');if(stats[0])stats[0].textContent=`${geometry.distance} km`;if(stats[1])stats[1].textContent=`~ ${Math.floor(geometry.duration/60)} h ${String(geometry.duration%60).padStart(2,'0')} min`;const status=$('#route-status');if(status)status.textContent=`Strada calcolata · ${geometry.distance} km`}else{setMapStatus('Percorso stradale non disponibile: la mappa resta esplorabile.',true)}}
 function labelForMapReport(category){const item=(window.RIDE_ROAD_SAFETY?.categories||[]).find(x=>x.key===category);return item?.label||'Segnalazione'}
+function roadReportVisual(report){
+ const category=String(report?.category||'other');
+ const text=[report?.title,report?.description,report?.road_name].filter(Boolean).join(' ').toLocaleLowerCase('it');
+ let iconKey=category;
+ if(category==='weather'){
+  if(/temporale|fulmine|tuon|storm|thunder/.test(text))iconKey='storm';
+  else if(/piogg|acqua|allag|rovesc|rain|diluvi/.test(text))iconKey='rain';
+  else if(/neve|ghiacc|gelat|snow|ghiacci/.test(text))iconKey='snow';
+  else if(/vento|raffich|wind/.test(text))iconKey='wind';
+  else if(/sole|seren|cald|sun/.test(text))iconKey='sun';
+  else iconKey='cloud';
+ }
+ const colors={hazard:'#ef4444',accident:'#e11d48',roadworks:'#f59e0b',closed:'#64748b',gravel:'#b7794c',damaged_road:'#eab308',weather:'#38bdf8',traffic:'#a78bfa',other:'#94a3b8'};
+ const paths={
+  hazard:'<path d="M12 3 22 20H2L12 3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  accident:'<path d="m5 16 1.5-7h11L19 16"/><path d="M4 16h16v4H4z"/><path d="M7 20v1m10-1v1M8 13h.01M16 13h.01"/><path d="m9 9 1.2-3h3.6L15 9"/>',
+  roadworks:'<path d="m12 3-6 18h12L12 3Z"/><path d="M9 12h6M8 16h8M4 21h16"/>',
+  closed:'<circle cx="12" cy="12" r="9"/><path d="M5 12h14"/>',
+  gravel:'<path d="m3 19 4-7 4 4 3-9 7 12H3Z"/><path d="M3 21h18"/>',
+  damaged_road:'<path d="M5 3v18M19 3v18M5 8h14M5 16h14"/><path d="m12 8-2 3 3 2-2 3"/>',
+  rain:'<path d="M20 16.5A4.5 4.5 0 0 0 18 8h-1A6 6 0 1 0 5 15"/><path d="m8 18-1 3m6-3-1 3m6-3-1 3"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/>',
+  snow:'<path d="M12 2v20M4 6l16 12M20 6 4 18M9 5l3 3 3-3M9 19l3-3 3 3"/>',
+  wind:'<path d="M3 8h12a3 3 0 1 0-3-3M2 12h17a3 3 0 1 1-3 3M4 16h8a3 3 0 1 1-3 3"/>',
+  storm:'<path d="M20 15.5A4.5 4.5 0 0 0 18 7h-1A6 6 0 1 0 5 14"/><path d="m13 12-4 6h4l-1 4 5-7h-4l1-3z"/>',
+  cloud:'<path d="M20 16.5A4.5 4.5 0 0 0 18 8h-1A6 6 0 1 0 5 15"/>',
+  traffic:'<rect x="7" y="3" width="10" height="18" rx="3"/><circle cx="12" cy="8" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="16" r="1.5"/>',
+  other:'<path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>'
+ };
+ if(!paths[iconKey])iconKey='other';
+ const svg='<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+paths[iconKey]+'</svg>';
+ return {category,iconKey,color:colors[category]||colors.other,label:labelForMapReport(category),paths:paths[iconKey],svg};
+}
+window.rideReportVisual=roadReportVisual;
 async function initMap(){
  const el=$('#main-map');if(!el)return;const token=++mapInitToken;
  setMapStatus('Caricamento mappa vettoriale e terreno 3D…');
@@ -3144,7 +3188,7 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
   });
   window.addEventListener('load',async()=>{
     try{
-      const registration=await navigator.serviceWorker.register('./sw.js?release=v36.2',{updateViaCache:'none'});
+      const registration=await navigator.serviceWorker.register('./sw.js?release=v37.6',{updateViaCache:'none'});
       await registration.update();
       if(registration.waiting)registration.waiting.postMessage({type:'SKIP_WAITING'});
     }catch(error){
