@@ -220,3 +220,14 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - La scheda Roadbook mostra anche il tempo di guida stimato, oltre a chilometri e numero di soste. Il tempo è una stima di marcia e non include pause, traffico o condizioni reali.
 - Restano invariati il motore cartografico V32, le soste salvate, i viaggi locali e la gestione esistente.
 - Aggiornata la cache PWA alla V34.
+
+## RIDE V35 — Shareable Roadbook
+
+- Ogni viaggio con almeno una giornata può generare un link Roadbook condivisibile tramite il menu nativo del telefono o copia negli appunti.
+- Il link contiene un payload RIDE dedicato compresso in gzip quando il browser lo supporta; non richiede backend, account o database remoto.
+- Il destinatario vede un'anteprima con nome del viaggio, partenza/destinazione, giornate, chilometri e numero di soste; può importare una copia nei propri Viaggi.
+- I viaggi esistenti del destinatario non vengono sovrascritti. Le importazioni ripetute dello stesso link vengono riconosciute.
+- Sono inclusi gli itinerari del catalogo e le tracce personali/GPX necessarie a ricostruire il percorso, oltre alle soste selezionate e ai dati pubblici essenziali dei luoghi.
+- Per privacy non vengono condivisi profilo, email, contatti di emergenza, manutenzione, rifornimenti, budget, checklist personali o note private.
+- I link sono autonomi: chiunque li riceva può visualizzare i dati inclusi. Il contenuto è nel frammento URL e non viene caricato su un server RIDE.
+- Aggiornata la cache PWA alla V35.
