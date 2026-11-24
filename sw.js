@@ -1,5 +1,5 @@
-const CACHE='ride-v37-4-native-road-report-markers-20261124';
-const RELEASE='v37.4';
+const CACHE='ride-v37-5-single-safety-load-20261124';
+const RELEASE='v37.5';
 const FILES=[
   './',
   './index.html',
