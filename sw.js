@@ -1,5 +1,5 @@
-const CACHE='ride-v19-gps-ridemode-20261124';
-const RELEASE='v19';
+const CACHE='ride-v20-trip-planner-20261124';
+const RELEASE='v20';
 const FILES=[
   './',
   './index.html',
