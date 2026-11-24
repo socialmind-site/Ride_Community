@@ -212,3 +212,11 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - Timeline delle soste raggruppata per giornata, con azioni “Centra” e “Scheda”: centrare una sosta seleziona la giornata, porta la mappa sul punto e ingrandisce il dettaglio.
 - Il motore raster V32, il caricamento immediato, i dati locali e l'aggiornamento delle soste restano invariati.
 - Aggiornata la cache PWA alla V33.
+
+## RIDE V34 — Roadbook controls & ride overview
+
+- Ridisegnati i pulsanti “Centra” e “Scheda” come capsule touch-friendly, con icone, colori distinti, focus visibile e stati di pressione.
+- Aggiunti filtri rapidi per tutte le soste, distributori, ristoro e pernottamenti. I filtri agiscono contemporaneamente sulla mappa, sui marker e sull'elenco ordinato, senza nascondere il tracciato.
+- La scheda Roadbook mostra anche il tempo di guida stimato, oltre a chilometri e numero di soste. Il tempo è una stima di marcia e non include pause, traffico o condizioni reali.
+- Restano invariati il motore cartografico V32, le soste salvate, i viaggi locali e la gestione esistente.
+- Aggiornata la cache PWA alla V34.

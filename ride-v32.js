@@ -68,18 +68,41 @@
     if(!current)return[];
     return current.days.filter(item=>current.filter==='all'||String(item.day.id)===String(current.filter));
   }
+  function visibleStops(item){
+    if(!current||current.categoryFilter==='all')return item.stops||[];
+    return(item.stops||[]).filter(stop=>String(stop.category)===String(current.categoryFilter));
+  }
+  function estimatedMinutes(item){
+    const route=item.route||{distance:routeDistance(item.points)};
+    if(typeof routeEstimatedMinutes==='function'){
+      const value=Number(routeEstimatedMinutes(route));
+      if(Number.isFinite(value)&&value>0)return value;
+    }
+    return Math.max(1,Math.round(routeDistance(item.points)/45*60));
+  }
+  function formatRideTime(minutes){
+    const value=Math.max(0,Math.round(n(minutes))),hours=Math.floor(value/60),mins=value%60;
+    return hours?hours+' h'+(mins?' '+mins+' min':''):mins+' min';
+  }
+  function setCategoryFilter(tripId,category){
+    if(!current||String(current.tripId)!==String(tripId))return;
+    current.categoryFilter=String(category||'all');
+    current.selectedStopId=null;
+    render();
+  }
   function orderMarkup(){
     const groups=[];
     visibleDays().forEach(item=>{
-      if(!item.stops.length)return;
+      const stops=visibleStops(item);
+      if(!stops.length)return;
       const title=item.route?.name||item.day.title||('Giornata '+(item.dayIndex+1));
-      const rows=item.stops.map((stop,index)=>{
+      const rows=stops.map((stop,index)=>{
         const number=(item.dayIndex+1)+'.'+(index+1);
-        return '<article class="trip-v33-order-row"><span class="trip-v33-order-number">'+number+'</span><span class="trip-v33-order-icon">'+categoryIcon(stop.category)+'</span><span class="trip-v33-order-copy"><strong>'+esc(stop.name)+'</strong><small>'+esc(categoryLabel(stop.category))+' · '+Math.round(stop.alongKm)+' km dalla partenza</small></span><span class="trip-v33-order-actions"><button type="button" data-v33-focus-stop="1" data-v33-day-id="'+esc(item.day.id)+'" data-v33-poi-id="'+esc(stop.id)+'">Centra</button><button type="button" data-v30-place-card="1" data-v30-day-id="'+esc(item.day.id)+'" data-v30-category="'+esc(stop.category)+'" data-v30-poi-id="'+esc(stop.id)+'">Scheda</button></span></article>';
+        return '<article class="trip-v33-order-row"><span class="trip-v33-order-number">'+number+'</span><span class="trip-v33-order-icon">'+categoryIcon(stop.category)+'</span><span class="trip-v33-order-copy"><strong>'+esc(stop.name)+'</strong><small>'+esc(categoryLabel(stop.category))+' · '+Math.round(stop.alongKm)+' km dalla partenza</small></span><span class="trip-v33-order-actions"><button type="button" class="trip-v34-action trip-v34-action-center" data-v33-focus-stop="1" data-v33-day-id="'+esc(item.day.id)+'" data-v33-poi-id="'+esc(stop.id)+'"><span class="trip-v34-action-icon" aria-hidden="true">⌖</span><span>Centra</span></button><button type="button" class="trip-v34-action trip-v34-action-card" data-v30-place-card="1" data-v30-day-id="'+esc(item.day.id)+'" data-v30-category="'+esc(stop.category)+'" data-v30-poi-id="'+esc(stop.id)+'"><span class="trip-v34-action-icon" aria-hidden="true">▤</span><span>Scheda</span></button></span></article>';
       }).join('');
-      groups.push('<section class="trip-v33-day-group"><div class="trip-v33-day-group-head"><span>G'+(item.dayIndex+1)+'</span><strong>'+esc(title)+'</strong><small>'+esc(formatDiaryDate(item.day.date))+' · '+item.stops.length+' '+(item.stops.length===1?'sosta':'soste')+'</small></div>'+rows+'</section>');
+      groups.push('<section class="trip-v33-day-group"><div class="trip-v33-day-group-head"><span>G'+(item.dayIndex+1)+'</span><strong>'+esc(title)+'</strong><small>'+esc(formatDiaryDate(item.day.date))+' · '+stops.length+' '+(stops.length===1?'sosta':'soste')+'</small></div>'+rows+'</section>');
     });
-    return groups.join('')||'<div class="trip-v30-map-empty">Nessuna sosta selezionata per questa visualizzazione.</div>';
+    return groups.join('')||'<div class="trip-v30-map-empty">Nessuna sosta selezionata per questi filtri.</div>';
   }
   function routeDistance(points){
     let total=0;
@@ -122,7 +145,7 @@
           paths.push('<path d="M -6 -5 L 7 0 L -6 5 Z" transform="translate('+b.x.toFixed(1)+' '+b.y.toFixed(1)+') rotate('+angle.toFixed(1)+')" fill="#ffffff" stroke="'+color+'" stroke-width="1.2"/>');
         });
       }
-      item.stops.forEach((stop,index)=>{
+      visibleStops(item).forEach((stop,index)=>{
         const p=pointOnScreen([stop.lat,stop.lon],current.view,w,h);
         if(p.x< -36||p.x>w+36||p.y< -42||p.y>h+36)return;
         const selected=String(stop.id)===String(current.selectedStopId);
@@ -130,17 +153,19 @@
       });
     });
     const totalKm=visible.reduce((sum,item)=>sum+(n(item.route?.distance)>0?n(item.route.distance):routeDistance(item.points)),0);
-    const stopCount=visible.reduce((sum,item)=>sum+item.stops.length,0);
+    const stopCount=visible.reduce((sum,item)=>sum+visibleStops(item).length,0);
+    const totalMinutes=visible.reduce((sum,item)=>sum+estimatedMinutes(item),0);
     const trip=tripById(current.tripId);
     const activeDay=current.filter==='all'?null:visible[0];
     const title=activeDay?(activeDay.route?.name||activeDay.day.title||'Giornata '+(activeDay.dayIndex+1)):(trip?.title||trip?.name||'Il tuo road trip');
     const subtitle=current.filter==='all'?(visible.length+' '+(visible.length===1?'giornata':'giornate')+' · '+stopCount+' '+(stopCount===1?'sosta pianificata':'soste pianificate')):('Giornata '+(activeDay?activeDay.dayIndex+1:'')+' · '+stopCount+' '+(stopCount===1?'sosta':'soste'));
-    const hud='<div class="trip-v33-map-hud"><span class="trip-v33-hud-kicker"><i></i> RIDE ROADBOOK</span><strong>'+esc(title)+'</strong><small>'+esc(subtitle)+'</small><div class="trip-v33-hud-stats"><span><b>'+Math.round(totalKm)+'</b> km</span><span><b>'+stopCount+'</b> soste</span></div></div>';
+    const hud='<div class="trip-v33-map-hud"><span class="trip-v33-hud-kicker"><i></i> RIDE ROADBOOK</span><strong>'+esc(title)+'</strong><small>'+esc(subtitle)+'</small><div class="trip-v33-hud-stats"><span><b>'+Math.round(totalKm)+'</b><small>KM</small></span><span><b>'+formatRideTime(totalMinutes)+'</b><small>GUIDA STIMATA</small></span><span><b>'+stopCount+'</b><small>SOSTE</small></span></div></div>';
     const selected=selectedStop();
     const selectedChip=selected?'<button type="button" class="trip-v33-selected-chip" data-v30-place-card="1" data-v30-day-id="'+esc(selected.day.id)+'" data-v30-category="'+esc(selected.category)+'" data-v30-poi-id="'+esc(selected.id)+'"><span>'+categoryIcon(selected.category)+'</span><span><small>SOSTA SELEZIONATA</small><b>'+esc(selected.name)+'</b></span><i>Vedi scheda ↗</i></button>':'';
     canvas.innerHTML='<div class="trip-v32-content"><div class="trip-v32-tiles">'+tiles.join('')+'</div><svg class="trip-v32-routes" viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none">'+paths.join('')+'</svg><div class="trip-v32-markers">'+markers.join('')+'</div></div>'+hud+selectedChip+'<div class="trip-v32-controls"><button type="button" data-v32-zoom="in" aria-label="Ingrandisci">+</button><button type="button" data-v32-zoom="out" aria-label="Riduci">−</button><button type="button" data-v32-zoom="fit" aria-label="Centra percorso">⌖</button></div><div class="trip-v32-attribution"><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a></div>';
     const order=document.querySelector('[data-v30-map-order="'+CSS.escape(String(current.tripId))+'"]');if(order)order.innerHTML=orderMarkup();
     document.querySelectorAll('[data-v30-map-filter][data-trip-id="'+CSS.escape(String(current.tripId))+'"]').forEach(b=>b.classList.toggle('active',b.dataset.v30MapFilter===current.filter));
+    document.querySelectorAll('[data-v34-category-filter][data-trip-id="'+CSS.escape(String(current.tripId))+'"]').forEach(b=>b.classList.toggle('active',b.dataset.v34CategoryFilter===current.categoryFilter));
     canvas.querySelectorAll('.trip-v32-tile').forEach(img=>img.addEventListener('error',()=>{img.style.opacity='.15';mapStatus(current.tripId,'Tracciato e soste visibili; alcune immagini cartografiche non sono raggiungibili.')},{once:true}));
   }
 
@@ -199,7 +224,7 @@
       const route=routes.find(r=>String(r.id)===String(day.routeId)),points=route?routePoints(route):[];
       return{day,dayIndex,route,points,approximate:true,stops:sortedStops(day,points)};
     });
-    current={tripId,canvas,days:initial,filter:'all',view:{center:{lat:45.8,lon:10.8},zoom:6},drag:null};
+    current={tripId,canvas,days:initial,filter:'all',categoryFilter:'all',view:{center:{lat:45.8,lon:10.8},zoom:6},drag:null};
     current.view=fitView(initial,canvas.clientWidth||340,canvas.clientHeight||280);
     render();
     mapStatus(tripId,'Mappa aperta. Aggiorno i tracciati stradali in background…');
@@ -256,6 +281,8 @@
       event.preventDefault();current.view.zoom=Math.max(4,Math.min(18,current.view.zoom+(event.deltaY<0?1:-1)));render();
     },{passive:false});
     document.addEventListener('click',event=>{
+      const category=event.target.closest('[data-v34-category-filter]');
+      if(category){event.preventDefault();event.stopImmediatePropagation();setCategoryFilter(category.dataset.tripId,category.dataset.v34CategoryFilter);return}
       const focus=event.target.closest('[data-v33-focus-stop]');
       if(focus){event.preventDefault();event.stopImmediatePropagation();focusStop(focus.dataset.v33DayId,focus.dataset.v33PoiId);return}
       const zoom=event.target.closest('[data-v32-zoom]');if(!zoom||!current)return;
@@ -311,7 +338,7 @@
   function start(){
     addStyles();installCanvasEvents();
     window.RIDE_V32={openTripMap,setFilter,refresh};
-    window.RIDE_V33={focusStop,selectStop};
+    window.RIDE_V33={focusStop,selectStop,setCategoryFilter};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();

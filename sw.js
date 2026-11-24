@@ -1,5 +1,5 @@
-const CACHE='ride-v33-roadbook-map-20261124';
-const RELEASE='v33';
+const CACHE='ride-v34-roadbook-filters-20261124';
+const RELEASE='v34';
 const FILES=[
   './',
   './index.html',
