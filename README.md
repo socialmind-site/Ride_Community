@@ -79,3 +79,12 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - Le coordinate vengono inviate a Valhalla come sequenza ordinata di località; il percorso risultante mantiene le manovre e la geometria per tutte le tratte.
 - Le tappe e le coordinate sono conservate nel percorso personale e incluse nell'esportazione GPX e nel backup locale.
 - Il servizio Valhalla pubblico non offre percorsi alternativi per richieste multipunto; in questo caso viene calcolato un unico itinerario per la sequenza selezionata.
+
+
+## RIDE V22 — Confronto percorsi motociclistici
+
+- Per itinerari A-to-B senza tappe intermedie il pianificatore può chiedere fino a due alternative a Valhalla.
+- Le opzioni restituite vengono salvate come percorsi distinti nella libreria personale e confrontate per distanza, durata e profilo.
+- Selezionando un'alternativa si aggiorna la mappa, il meteo, l'altimetria e le indicazioni per quel tracciato.
+- Valhalla non supporta alternative automatiche per richieste con più di due località; quando sono presenti tappe intermedie viene calcolato un solo percorso.
+- Il server pubblico può restituire meno alternative di quelle richieste o nessuna alternativa distinta.
