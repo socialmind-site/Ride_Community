@@ -1,10 +1,11 @@
-const CACHE='ride-v25-gps-pause-resume-20261124';
-const RELEASE='v25';
+const CACHE='ride-v26-smart-travel-20261124';
+const RELEASE='v26';
 const FILES=[
   './',
   './index.html',
   './routes-catalog.js',
   './europe-routes.js',
+  './ride-v26.js',
   './manifest.webmanifest',
   './icon.svg',
   './assets/garda-road.webp',
