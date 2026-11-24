@@ -14,7 +14,7 @@ const CATEGORIES=[
  ['traffic','Traffico / rallentamenti','🚦'],
  ['other','Altro','📍']
 ];
-let client=null,sessionUser=null,rows=[],channel=null,loading=false,lastLocation=null,initPromise=null;
+let client=null,sessionUser=null,rows=[],channel=null,loading=false,lastLocation=null,initPromise=null,selectedCategory='all';
 const $=(s,r=document)=>r.querySelector(s);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const label=key=>CATEGORIES.find(c=>c[0]===key)?.[1]||'Segnalazione';
@@ -29,25 +29,46 @@ const CATEGORY_COLORS={
 function activeReports(){
  return rows.filter(r=>r.status==='active'&&new Date(r.expires_at)>new Date()).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
 }
+function filteredReports(){
+ const all=activeReports();
+ return selectedCategory==='all'?all:all.filter(r=>r.category===selectedCategory);
+}
+function renderMapFilters(){
+ const bar=$('#road-report-filters');if(!bar)return;
+ const all=activeReports(),counts=new Map();
+ all.forEach(report=>counts.set(report.category,(counts.get(report.category)||0)+1));
+ const items=[{key:'all',label:'Tutte',icon:'◉',color:'#b8f52e'},...CATEGORIES.map(c=>({key:c[0],label:c[1].replace(' sulla strada','').replace(' / rallentamenti',''),icon:c[2],color:CATEGORY_COLORS[c[0]]||'#94a3b8'}))];
+ bar.innerHTML=items.map(item=>{
+  const count=item.key==='all'?all.length:(counts.get(item.key)||0),active=selectedCategory===item.key;
+  return '<button type="button" class="road-report-filter'+(active?' active':'')+'" data-rs-filter="'+esc(item.key)+'" aria-pressed="'+(active?'true':'false')+'" style="--rs-filter-color:'+item.color+'"><span class="road-report-filter-icon">'+item.icon+'</span><span class="road-report-filter-label">'+esc(item.label)+'</span><b>'+count+'</b></button>';
+ }).join('');
+ const total=$('#road-report-filter-total');if(total)total.textContent=String(filteredReports().length)+' / '+all.length+' attive';
+}
+function setCategoryFilter(key){
+ selectedCategory=key==='all'||CATEGORIES.some(c=>c[0]===key)?key:'all';
+ render();
+}
 function notifyMap(){
- const reports=activeReports();
+ const reports=filteredReports();
  if(window.rideMap&&typeof window.rideMap.setRoadSafetyReports==='function'){
   try{window.rideMap.setRoadSafetyReports(reports)}catch(error){console.warn('RIDE road report markers',error)}
  }
  window.dispatchEvent(new CustomEvent('ride-road-reports-updated',{detail:{reports:reports}}));
 }
 function render(){
- const active=activeReports(),list=$('#road-safety-list');
+ const active=activeReports(),visible=filteredReports(),list=$('#road-safety-list');
  const count=$('#road-safety-count');
  if(count)count.textContent=String(active.length);
+ renderMapFilters();
  if(list){
-  list.innerHTML=active.length?active.map(r=>{
+  list.innerHTML=visible.length?visible.map(r=>{
    const mine=sessionUser&&r.author_id===sessionUser.id;
    return '<article class="rs-report-card"><div class="rs-report-top"><span class="rs-report-icon">'+icon(r.category)+'</span><span class="rs-report-kind">'+esc(label(r.category))+'</span><span class="rs-report-time">'+esc(dateText(r.created_at))+'</span></div><strong>'+esc(r.title)+'</strong>'+(r.road_name?'<small class="rs-road-name">📍 '+esc(r.road_name)+'</small>':'')+(r.description?'<p>'+esc(r.description)+'</p>':'')+'<div class="rs-report-foot"><span>✓ '+Number(r.confirmations||0)+' conferme</span><span>Scade '+esc(dateText(r.expires_at))+'</span></div><div class="rs-report-actions"><button type="button" data-rs-vote="still_there" data-rs-id="'+esc(r.id)+'">⚠️ Ancora presente</button><button type="button" data-rs-vote="resolved" data-rs-id="'+esc(r.id)+'">✓ Risolto</button>'+(mine?'<button type="button" data-rs-resolve="'+esc(r.id)+'">Chiudi mia segnalazione</button>':'')+'<a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(r.latitude+','+r.longitude)+'">Apri posizione ↗</a></div></article>';
-  }).join(''):'<div class="rs-empty">Nessuna segnalazione attiva in questo momento. Se noti un pericolo, aiutaci ad avvisare gli altri motociclisti.</div>';
+  }).join(''):'<div class="rs-empty">'+(active.length?'Nessuna segnalazione in questa categoria. Prova un altro filtro.':'Nessuna segnalazione attiva in questo momento. Se noti un pericolo, aiutaci ad avvisare gli altri motociclisti.')+'</div>';
  }
  notifyMap();
 }
+
 function openMapReport(id){
  const report=activeReports().find(r=>String(r.id)===String(id));if(!report)return;
  const item=CATEGORIES.find(c=>c[0]===report.category)||CATEGORIES[CATEGORIES.length-1];
@@ -151,6 +172,7 @@ async function init(){
 }
 document.addEventListener('click',async e=>{
  const target=e.target instanceof Element?e.target:null;if(!target)return;
+ const filter=target.closest('[data-rs-filter]');if(filter){e.preventDefault();setCategoryFilter(filter.dataset.rsFilter||'all');return}
  const create=target.closest('[data-rs-create]');if(create){e.preventDefault();createReport();return}
  const vote=target.closest('[data-rs-vote]');if(vote){vote.disabled=true;try{await window.RIDE_ROAD_SAFETY.vote(vote.dataset.rsId,vote.dataset.rsVote)}catch(err){toast(err.message||'Conferma non riuscita.')}finally{vote.disabled=false}return}
  const close=target.closest('[data-rs-resolve]');if(close){close.disabled=true;try{await resolve(close.dataset.rsResolve)}catch(err){toast(err.message||'Chiusura non riuscita.')}finally{close.disabled=false}}
@@ -161,6 +183,6 @@ document.addEventListener('submit',async e=>{
  try{await submitReport(e.target)}catch(err){toast(err.message||'Segnalazione non pubblicata.')}finally{button.disabled=false;button.textContent='Pubblica segnalazione'}
 });
 window.addEventListener('ride-road-reports-updated',event=>{const map=window.rideMap;if(map&&typeof map.setRoadSafetyReports==='function')map.setRoadSafetyReports(event.detail?.reports||[])});
-window.RIDE_ROAD_SAFETY={load,vote,createReport,renderPanel:render,getReports:activeReports,openMapReport,categories:CATEGORIES.map(c=>({key:c[0],label:c[1],icon:c[2],color:CATEGORY_COLORS[c[0]]||'#94a3b8'}))};
+window.RIDE_ROAD_SAFETY={load,vote,createReport,renderPanel:render,getReports:filteredReports,getAllReports:activeReports,setCategoryFilter,getCategoryFilter:()=>selectedCategory,openMapReport,categories:CATEGORIES.map(c=>({key:c[0],label:c[1],icon:c[2],color:CATEGORY_COLORS[c[0]]||'#94a3b8'}))};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
