@@ -1,10 +1,9 @@
-const CACHE='ride-v37-1-road-safety-mobile-fix-20261124';
-const RELEASE='v37.1';
+const CACHE='ride-v37-2-community-map-stability-20261124';
+const RELEASE='v37.2';
 const FILES=[
   './',
   './index.html',
   './ride-road-safety.js',
-  './ride-road-safety-map.js',
   './routes-catalog.js',
   './europe-routes.js',
   './ride-v26.js',
