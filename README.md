@@ -162,3 +162,14 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - Il dettaglio viaggio torna a usare il flusso stabile V27/V26; giornate, budget, carburante, soste salvate, rimozione e link Google Maps restano disponibili.
 - Il file V28 rimane nel repository come modulo non caricato, per una successiva reimplementazione isolata e più leggera.
 - Aggiornata la cache PWA alla V29.2 per non riutilizzare il vecchio HTML che caricava la mappa.
+
+## RIDE V30 — Mappa leggera e schede informative dei luoghi
+
+- La mappa del viaggio usa Leaflet e cartografia OpenStreetMap raster, senza WebGL. È caricata solo su richiesta dal pulsante “Apri mappa del viaggio”, così il dettaglio del viaggio resta leggero.
+- Mappa multi-giornata con filtro per singola giornata, tracciati colorati, partenza/arrivo e marker numerati per le soste salvate.
+- Le soste sono ordinate per distanza progressiva sul tracciato; quando il routing stradale non è disponibile, il sistema usa i punti dell'itinerario e segnala che la linea è indicativa.
+- Ogni risultato e ogni sosta salvata dispone di “Vedi scheda”: indirizzo mappato, coordinate, telefono, sito, email, orari, cucina, servizi, carburanti e classificazione hotel quando presenti nei tag OpenStreetMap.
+- Le schede mostrano valutazioni/recensioni solo se esplicitamente presenti nei dati aperti. In assenza di punteggi, non vengono inventate stelle: è disponibile una ricerca web delle recensioni.
+- Ricerca POI ottimizzata: campionamento adattivo del percorso, una query compatta per categoria, due server Overpass interrogati in parallelo, timeout e riuso locale dei risultati per 12 minuti.
+- I risultati conservano tag e identificativi OSM per caricare ulteriori dettagli quando l'utente apre una scheda. Le informazioni possono essere incomplete o non aggiornate; verificare direttamente con l'attività.
+- I dati del viaggio restano locali. Mappa e ricerca richiedono connessione Internet; i tile OpenStreetMap sono attribuiti correttamente.
