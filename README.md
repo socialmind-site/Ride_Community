@@ -88,3 +88,11 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - Selezionando un'alternativa si aggiorna la mappa, il meteo, l'altimetria e le indicazioni per quel tracciato.
 - Valhalla non supporta alternative automatiche per richieste con più di due località; quando sono presenti tappe intermedie viene calcolato un solo percorso.
 - Il server pubblico può restituire meno alternative di quelle richieste o nessuna alternativa distinta.
+
+
+## RIDE V23 — Esportazione viaggi multi-giorno
+
+- Ogni viaggio pianificato può essere esportato come file GPX multi-traccia: una traccia separata per ciascuna giornata con un itinerario valido.
+- Le geometrie stradali mancanti vengono richieste al motore di routing prima di comporre il file; se non sono disponibili, la giornata viene saltata e il numero di tracce esportate viene indicato all'utente.
+- Il viaggio può essere esportato anche come file calendario `.ics`, con un evento per giornata, orario di partenza, itinerario, località, pernottamento e note.
+- I file vengono generati localmente nel browser. Non è richiesto un backend.
