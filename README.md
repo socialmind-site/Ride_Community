@@ -69,3 +69,13 @@ Profili, gruppi, chat, partecipazioni e preferiti sono dimostrativi e vengono sa
 - Riepilogo automatico di giornate, chilometri pianificati e budget stimato.
 - Promemoria locali per le giornate di viaggio nei 14 giorni successivi.
 - I viaggi sono salvati in locale e inclusi nel backup JSON; non vengono sincronizzati tra dispositivi.
+
+
+## RIDE V21 — Pianificatore multi-tappa
+
+- Il pianificatore motociclistico supporta fino a cinque tappe intermedie ordinate tra partenza e destinazione.
+- Le tappe possono essere aggiunte, rimosse e riordinate prima del calcolo.
+- La ricerca di ogni tappa usa la catena di geocodifica locale / Open-Meteo / Photon / Nominatim già presente.
+- Le coordinate vengono inviate a Valhalla come sequenza ordinata di località; il percorso risultante mantiene le manovre e la geometria per tutte le tratte.
+- Le tappe e le coordinate sono conservate nel percorso personale e incluse nell'esportazione GPX e nel backup locale.
+- Il servizio Valhalla pubblico non offre percorsi alternativi per richieste multipunto; in questo caso viene calcolato un unico itinerario per la sequenza selezionata.
