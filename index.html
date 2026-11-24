@@ -1282,7 +1282,7 @@ async function loadRouteElevation(r,geometry){
  }
 }
 
-function poiCategoryFor(tags)
+function poiCategoryFor(tags){
  if(tags.amenity==='fuel')return'fuel';
  if(tags.shop==='motorcycle'||tags.craft==='motorcycle_repair'||tags.amenity==='car_repair')return'workshop';
  if(tags.amenity==='restaurant'||tags.amenity==='cafe'||tags.amenity==='bar')return'food';
