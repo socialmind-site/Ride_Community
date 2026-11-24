@@ -1,5 +1,5 @@
-const CACHE='ride-v37-6-custom-report-icons-popup-20261124';
-const RELEASE='v37.6';
+const CACHE='ride-v37-7-clustering-filters-20261124';
+const RELEASE='v37.7';
 const FILES=[
   './',
   './index.html',
